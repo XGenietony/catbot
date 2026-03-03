@@ -23,7 +23,7 @@ export function AssistantMessage({ message }: AssistantMessageProps): React.JSX.
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeHighlight]}
           >
-            {message.text}
+            {message.content}
           </ReactMarkdown>
         </div>
         <span className="text-xs opacity-50 mt-1 block">

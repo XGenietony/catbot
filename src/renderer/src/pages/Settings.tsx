@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Settings as SettingsIcon, Monitor, Cpu, Loader2, Save } from 'lucide-react'
+import { Settings as SettingsIcon, Monitor, Cpu, Loader2, Save, Eye, EyeOff } from 'lucide-react'
 
 interface ModelSettings {
   provider: string
@@ -38,6 +38,7 @@ export default function Settings(): React.JSX.Element {
   const [saving, setSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [originalSettings, setOriginalSettings] = useState<string>('')
+  const [showApiKey, setShowApiKey] = useState(false)
 
   useEffect(() => {
     loadSettings()
@@ -183,13 +184,22 @@ export default function Settings(): React.JSX.Element {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         API Key
                       </label>
-                      <input
-                        type="password"
-                        value={settings.model.apiKey}
-                        onChange={(e) => updateModelSetting('apiKey', e.target.value)}
-                        placeholder="sk-..."
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showApiKey ? 'text' : 'password'}
+                          value={settings.model.apiKey}
+                          onChange={(e) => updateModelSetting('apiKey', e.target.value)}
+                          placeholder="sk-..."
+                          className="w-full px-3 py-2 pr-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
                     </div>
 
                     <div>

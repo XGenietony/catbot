@@ -3,6 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
 import { join, resolve, sep } from 'node:path'
+import { randomUUID } from 'node:crypto'
 import Anthropic from '@anthropic-ai/sdk'
 import type {
   ContentBlock,
@@ -11,6 +12,10 @@ import type {
   ToolResultBlockParam,
   ToolUseBlock
 } from '@anthropic-ai/sdk/resources/messages'
+import { SystemPromptManager } from '../managers/system-prompt-manager'
+import { SettingsManager } from '../managers/settings-manager'
+import { SessionManager } from '../managers/session-manager'
+import { ChatMessage } from '../../common/types'
 
 const execAsync = promisify(exec)
 
@@ -66,8 +71,8 @@ export interface AgentLoopOptions {
   workspacePath: string
   maxTokens?: number
   maxSteps?: number
-  onToolUse?: (toolName: string, input: unknown) => void
-  onToolResult?: (toolName: string, output: string) => void
+  onToolUse?: (toolName: string, input: unknown, toolUseId: string) => void | Promise<void>
+  onToolResult?: (toolName: string, output: string) => void | Promise<void>
 }
 
 function resolveWorkspacePath(workspacePath: string, inputPath: string): string {
@@ -144,10 +149,56 @@ export function createToolHandlers(workspacePath: string): Record<string, ToolHa
 }
 
 export async function agentLoop(
-  initialMessages: MessageParam[],
+  initialMessages: ChatMessage[],
   opts: AgentLoopOptions
 ): Promise<MessageParam[]> {
-  const messages: MessageParam[] = [...initialMessages]
+  // Convert ChatMessage[] to MessageParam[] for Anthropic
+  const messages: MessageParam[] = []
+  
+  for (const msg of initialMessages) {
+    if (msg.role === 'user') {
+        messages.push({ role: 'user', content: msg.content })
+      } else if (msg.role === 'assistant') {
+        if (msg.toolUse) {
+          // Reconstruct Tool Use and Tool Result
+          // We use the persisted toolUseId if available, otherwise fallback to deterministic ID
+          const toolUseId = msg.toolUse.toolUseId || `call_${msg.id.slice(0, 10)}`
+          
+          // 1. Assistant Message with Tool Use
+        messages.push({
+          role: 'assistant',
+          content: [
+            { type: 'text', text: msg.content },
+            {
+              type: 'tool_use',
+              id: toolUseId,
+              name: msg.toolUse.tool,
+              input: msg.toolUse.input as any
+            }
+          ]
+        })
+
+        // 2. User Message with Tool Result (if output exists)
+        if (msg.toolUse.output !== undefined) {
+          messages.push({
+            role: 'user',
+            content: [
+              {
+                type: 'tool_result',
+                tool_use_id: toolUseId,
+                content: msg.toolUse.output,
+                is_error: false // We don't track is_error in ChatMessage yet, assume false
+              }
+            ]
+          })
+        }
+      } else {
+        // Standard Assistant Message
+        messages.push({ role: 'assistant', content: msg.content })
+      }
+    }
+  }
+
   const handlers = createToolHandlers(opts.workspacePath)
   const maxSteps = typeof opts.maxSteps === 'number' ? opts.maxSteps : 20
   const maxTokens = typeof opts.maxTokens === 'number' ? opts.maxTokens : 8000
@@ -174,9 +225,9 @@ export async function agentLoop(
       const handler = handlers[toolUse.name]
       let output: string
       try {
-        opts.onToolUse?.(toolUse.name, toolUse.input)
+        await opts.onToolUse?.(toolUse.name, toolUse.input, toolUse.id)
         output = handler ? await handler(toolUse.input) : `Unknown tool: ${toolUse.name}`
-        opts.onToolResult?.(toolUse.name, output)
+        await opts.onToolResult?.(toolUse.name, output)
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err)
         output = `Tool error (${toolUse.name}): ${msg}`
@@ -192,33 +243,18 @@ export async function agentLoop(
 
 interface AgentHandlerOptions {
   workspacePath: string
-  configPath: string
-  identityPath: string
+  systemPromptManager: SystemPromptManager
+  settingsManager: SettingsManager
+  sessionManager: SessionManager
 }
 
-export function registerAgentHandlers({ workspacePath, configPath, identityPath }: AgentHandlerOptions): void {
+export function registerAgentHandlers({ workspacePath, systemPromptManager, settingsManager, sessionManager }: AgentHandlerOptions): void {
   // IPC Handler for Agent Loop
-  ipcMain.handle('agent-loop', async (_, messages: MessageParam[]) => {
+  ipcMain.handle('agent-loop', async (_, messages: ChatMessage[]) => {
     try {
       // 1. Read Config
-      let config: unknown = {}
-      try {
-        const configContent = await readFile(configPath, 'utf-8')
-        config = JSON.parse(configContent)
-      } catch (err) {
-        console.warn('Failed to read catbot.json', err)
-      }
-
-      const configRecord = typeof config === 'object' && config !== null ? (config as Record<string, unknown>) : {}
-      const modelRecord =
-        typeof configRecord.model === 'object' && configRecord.model !== null
-          ? (configRecord.model as Record<string, unknown>)
-          : {}
-
-      const provider = typeof modelRecord.provider === 'string' ? modelRecord.provider : ''
-      const apiKey = typeof modelRecord.apiKey === 'string' ? modelRecord.apiKey : ''
-      const baseUrl = typeof modelRecord.baseUrl === 'string' ? modelRecord.baseUrl : ''
-      const modelName = typeof modelRecord.modelName === 'string' ? modelRecord.modelName : ''
+      const config = await settingsManager.read()
+      const { provider, apiKey, baseUrl, modelName } = config.model
 
       if (!apiKey) {
         throw new Error('API Key is missing in Settings')
@@ -229,12 +265,7 @@ export function registerAgentHandlers({ workspacePath, configPath, identityPath 
       }
 
       // 2. Read System Prompt (Identity)
-      let systemPrompt = ''
-      try {
-        systemPrompt = await readFile(identityPath, 'utf-8')
-      } catch (err) {
-        console.warn('Failed to read IDENTITY.md', err)
-      }
+      const systemPrompt = await systemPromptManager.read('IDENTITY.md')
 
       // 3. Initialize Client
       const client = new Anthropic({
@@ -243,28 +274,71 @@ export function registerAgentHandlers({ workspacePath, configPath, identityPath 
       })
 
       // 4. Run Agent Loop
+      
+      // Extract user's last message and append to session
+      const lastUserMsg = messages[messages.length - 1]
+      if (lastUserMsg && lastUserMsg.role === 'user') {
+        await sessionManager.append(lastUserMsg)
+      }
+
+      let currentToolMsgId: string | undefined
+      let currentToolInput: unknown | undefined
+
       const finalMessages = await agentLoop(messages, {
         client,
         model: modelName || 'claude-3-opus-20240229',
         system: systemPrompt,
         workspacePath,
         maxSteps: 10, // reasonable default
-        onToolUse: (toolName, input) => {
+        onToolUse: async (toolName, input, toolUseId) => {
           try {
+            const id = randomUUID()
+            currentToolMsgId = id
+            currentToolInput = input
+            const timestamp = Date.now()
+
+            const msg: ChatMessage = {
+              id,
+              role: 'assistant',
+              content: `Using tool: ${toolName}`,
+              timestamp,
+              toolUse: { tool: toolName, input, toolUseId }
+            }
+
             // Use event.sender instead of mainWindow
             const win = BrowserWindow.getAllWindows()[0]
             if (win) {
-              win.webContents.send('agent-update', { type: 'tool_use', tool: toolName, input })
+              win.webContents.send('agent-update', { 
+                type: 'tool_use', 
+                tool: toolName, 
+                input,
+                toolUseId,
+                message: msg
+              })
             }
+
+            // Append to session
+            await sessionManager.append(msg)
           } catch (e) {
             console.error('Failed to send tool_use update', e)
           }
         },
-        onToolResult: (toolName, output) => {
+        onToolResult: async (toolName, output) => {
           try {
             const win = BrowserWindow.getAllWindows()[0]
             if (win) {
-              win.webContents.send('agent-update', { type: 'tool_result', tool: toolName, output })
+              win.webContents.send('agent-update', { 
+                type: 'tool_result', 
+                tool: toolName, 
+                output,
+                id: currentToolMsgId
+              })
+            }
+
+            if (currentToolMsgId && currentToolInput) {
+              await sessionManager.update(currentToolMsgId, {
+                toolUse: { tool: toolName, input: currentToolInput, output }
+              })
             }
           } catch (e) {
             console.error('Failed to send tool_result update', e)
@@ -275,11 +349,23 @@ export function registerAgentHandlers({ workspacePath, configPath, identityPath 
       // Return the last message content
       const lastMessage = finalMessages[finalMessages.length - 1]
       if (lastMessage.role === 'assistant') {
+        let responseText = ''
         if (typeof lastMessage.content === 'string') {
-          return lastMessage.content
+          responseText = lastMessage.content
         } else if (Array.isArray(lastMessage.content)) {
           const textBlock = (lastMessage.content as ContentBlock[]).find((block) => block.type === 'text')
-          return textBlock && 'text' in textBlock ? (textBlock as { text: string }).text : ''
+          responseText = textBlock && 'text' in textBlock ? (textBlock as { text: string }).text : ''
+        }
+
+        if (responseText) {
+          const msg: ChatMessage = {
+            id: randomUUID(),
+            role: 'assistant',
+            content: responseText,
+            timestamp: Date.now()
+          }
+          await sessionManager.append(msg)
+          return responseText
         }
       }
       return ''
@@ -287,103 +373,6 @@ export function registerAgentHandlers({ workspacePath, configPath, identityPath 
       console.error('Agent Loop Failed:', error)
       const msg = error instanceof Error ? error.message : String(error)
       throw new Error(msg || 'Failed to run agent loop')
-    }
-  })
-
-  // IPC Handler for LLM
-  ipcMain.handle('llm-request', async (_, messages: { role: 'user' | 'assistant'; content: string }[]) => {
-    try {
-      // 1. Read Config
-      let config: unknown = {}
-      try {
-        const configContent = await readFile(configPath, 'utf-8')
-        config = JSON.parse(configContent)
-      } catch (err) {
-        console.warn('Failed to read catbot.json', err)
-      }
-
-      const configRecord = typeof config === 'object' && config !== null ? (config as Record<string, unknown>) : {}
-      const modelRecord =
-        typeof configRecord.model === 'object' && configRecord.model !== null
-          ? (configRecord.model as Record<string, unknown>)
-          : {}
-
-      const provider = typeof modelRecord.provider === 'string' ? modelRecord.provider : ''
-      const apiKey = typeof modelRecord.apiKey === 'string' ? modelRecord.apiKey : ''
-      const baseUrl = typeof modelRecord.baseUrl === 'string' ? modelRecord.baseUrl : ''
-      const modelName = typeof modelRecord.modelName === 'string' ? modelRecord.modelName : ''
-
-      if (!apiKey) {
-        throw new Error('API Key is missing in Settings')
-      }
-
-      // 2. Read System Prompt (Identity)
-      let systemPrompt = ''
-      try {
-        systemPrompt = await readFile(identityPath, 'utf-8')
-      } catch (err) {
-        console.warn('Failed to read IDENTITY.md', err)
-      }
-
-      // 3. Call LLM Provider
-      if (provider === 'anthropic') {
-        const client = new Anthropic({
-          apiKey,
-          baseURL: baseUrl || undefined
-        })
-
-        const response = await client.messages.create({
-          model: modelName || 'claude-3-opus-20240229',
-          system: systemPrompt,
-          messages: messages.map((m) => ({ role: m.role, content: m.content })),
-          max_tokens: 1024
-        })
-
-        const textBlock = (response.content as ContentBlock[]).find((block) => block.type === 'text')
-        return textBlock && 'text' in textBlock ? String((textBlock as { text: string }).text) : ''
-      } else if (provider === 'openai') {
-        const url = `${baseUrl || 'https://api.openai.com/v1'}/chat/completions`
-
-        const payload = {
-          model: modelName || 'gpt-4o',
-          messages: [
-            ...(systemPrompt ? [{ role: 'system' as const, content: systemPrompt }] : []),
-            ...messages.map((m) => ({ role: m.role, content: m.content }))
-          ]
-        } as const
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`
-          },
-          body: JSON.stringify(payload)
-        })
-
-        if (!response.ok) {
-          const errorText = await response.text()
-          throw new Error(`OpenAI request failed: ${response.status} ${errorText}`)
-        }
-
-        const data: unknown = await response.json()
-        const record = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {}
-        const choices = Array.isArray(record.choices) ? record.choices : []
-        const first = choices[0]
-        const firstRecord = typeof first === 'object' && first !== null ? (first as Record<string, unknown>) : {}
-        const messageObj =
-          typeof firstRecord.message === 'object' && firstRecord.message !== null
-            ? (firstRecord.message as Record<string, unknown>)
-            : {}
-        const content = messageObj.content
-        return typeof content === 'string' ? content : ''
-      } else {
-        throw new Error(`Unsupported provider: ${provider}`)
-      }
-    } catch (error: unknown) {
-      console.error('LLM Request Failed:', error)
-      const msg = error instanceof Error ? error.message : String(error)
-      throw new Error(msg || 'Failed to send message to LLM')
     }
   })
 }

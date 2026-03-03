@@ -1,21 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
-import { UserCog, Loader2 } from 'lucide-react'
-import { PersonaModal } from '../components/PersonaModal'
-import { sendMessageToLLM, ChatMessage } from '../services/LLMService'
+import { UserCog, Loader2, Trash2 } from 'lucide-react'
+import { v4 as uuidv4 } from 'uuid'
+import { PersonaModal } from '../components/persona-modal'
 import { Message } from '../components/chat/types'
-import { UserMessage } from '../components/chat/UserMessage'
-import { AssistantMessage } from '../components/chat/AssistantMessage'
-import { ToolMessage } from '../components/chat/ToolMessage'
+import { UserMessage } from '../components/chat/user-message'
+import { AssistantMessage } from '../components/chat/assistant-message'
+import { ToolMessage } from '../components/chat/tool-message'
 
 export default function Chat(): React.JSX.Element {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hello! How can I help you today?',
-      sender: 'bot',
-      timestamp: Date.now()
-    }
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -26,6 +19,21 @@ export default function Chat(): React.JSX.Element {
   }
 
   useEffect(() => {
+    const loadSession = async () => {
+      try {
+        const history = await window.api.readSession()
+        if (history && history.length > 0) {
+          // Use history directly since Message is now just ChatMessage
+          setMessages(history)
+        }
+      } catch (error) {
+        console.error('Failed to load session:', error)
+      }
+    }
+    loadSession()
+  }, [])
+
+  useEffect(() => {
     scrollToBottom()
   }, [messages, isLoading])
 
@@ -33,19 +41,36 @@ export default function Chat(): React.JSX.Element {
     if (window.api?.onAgentUpdate) {
       const cleanup = window.api.onAgentUpdate((data) => {
         if (data.type === 'tool_use') {
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            text: `Using tool: ${data.tool}`,
-            sender: 'bot',
+          // Use the message provided by the backend if available, or construct one
+          const newMessage: Message = data.message || {
+            id: uuidv4(),
+            content: `Using tool: ${data.tool}`,
+            role: 'assistant',
             timestamp: Date.now(),
             toolUse: {
               tool: data.tool,
               input: data.input
             }
-          }])
+          }
+          setMessages(prev => [...prev, newMessage])
         } else if (data.type === 'tool_result') {
           setMessages(prev => {
-            // Find the last message that is a tool use of the same tool and has no output
+            // Try to find by ID first
+            if (data.id) {
+              const index = prev.findIndex(m => m.id === data.id)
+              if (index !== -1) {
+                const msg = prev[index]
+                const updated = {
+                  ...msg,
+                  toolUse: { ...msg.toolUse!, output: data.output }
+                }
+                const newMessages = [...prev]
+                newMessages[index] = updated
+                return newMessages
+              }
+            }
+
+            // Fallback: Find the last message that is a tool use of the same tool and has no output
             // We search from the end
             const reversed = [...prev].reverse()
             const index = reversed.findIndex(m => m.toolUse && m.toolUse.tool === data.tool && !m.toolUse.output)
@@ -76,9 +101,9 @@ export default function Chat(): React.JSX.Element {
     if (!inputValue.trim() || isLoading) return
 
     const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputValue,
-      sender: 'user',
+      id: uuidv4(),
+      content: inputValue,
+      role: 'user',
       timestamp: Date.now()
     }
 
@@ -90,17 +115,17 @@ export default function Chat(): React.JSX.Element {
     try {
       // Prepare history for LLM
       // Map existing messages plus the new one
-      const history: ChatMessage[] = [...messages, userMessage].map(m => ({
-        role: m.sender === 'user' ? 'user' : 'assistant',
-        content: m.text
-      }))
+      const history = [...messages, userMessage]
 
-      const responseText = await sendMessageToLLM(history)
+      // Call agent loop (it will handle session appending)
+      const responseText = await window.api.agentLoop(history)
 
       const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: responseText,
-        sender: 'bot',
+        id: uuidv4(), // This ID will be different from what backend saves... 
+        // Ideally backend should return the saved message or ID?
+        // But for now we just display. On reload it will sync.
+        content: responseText,
+        role: 'assistant',
         timestamp: Date.now()
       }
       setMessages(prev => [...prev, botResponse])
@@ -108,9 +133,9 @@ export default function Chat(): React.JSX.Element {
       console.error('Chat error:', error)
       const msg = error instanceof Error ? error.message : String(error)
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: `Error: ${msg || 'Failed to get response'}`,
-        sender: 'bot',
+        id: uuidv4(),
+        content: `Error: ${msg || 'Failed to get response'}`,
+        role: 'assistant',
         timestamp: Date.now(),
         isError: true
       }
@@ -128,18 +153,34 @@ export default function Chat(): React.JSX.Element {
     }
   }
 
+  const handleClearSession = async (): Promise<void> => {
+    if (window.confirm('此操作无法恢复，请谨慎操作。\nAre you sure you want to clear the session?')) {
+      await window.api.clearSession()
+      setMessages([])
+    }
+  }
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 text-gray-900 dark:text-white relative">
       {/* Header */}
       <header className="flex-none p-4 border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur flex justify-between items-center">
         <h1 className="text-xl font-bold">CatBot Chat</h1>
-        <button
-          onClick={() => setIsPersonaModalOpen(true)}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
-          title="Set Persona"
-        >
-          <UserCog size={20} />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleClearSession}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hover:text-red-500 dark:hover:text-red-400"
+            title="Clear Session"
+          >
+            <Trash2 size={20} />
+          </button>
+          <button
+            onClick={() => setIsPersonaModalOpen(true)}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
+            title="Set Persona"
+          >
+            <UserCog size={20} />
+          </button>
+        </div>
       </header>
 
       {/* Persona Modal */}
@@ -151,7 +192,7 @@ export default function Chat(): React.JSX.Element {
       {/* Chat History */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => {
-          if (message.sender === 'user') {
+          if (message.role === 'user') {
             return <UserMessage key={message.id} message={message} />
           }
           if (message.toolUse) {

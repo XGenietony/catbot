@@ -1,4 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
+import { ChatMessage } from '../common/types'
 
 interface FileEntry {
   name: string
@@ -14,8 +15,9 @@ declare global {
       writeConfigFile: (fileName: string, content: string) => Promise<void>
       readWorkspaceDir: (subDir?: string) => Promise<FileEntry[]>
       openFile: (filePath: string) => Promise<void>
-      llmRequest: (messages: { role: string; content: string }[]) => Promise<string>
-      agentLoop: (messages: any[]) => Promise<string>
+      agentLoop: (messages: ChatMessage[]) => Promise<string>
+      readSession: () => Promise<ChatMessage[]>
+      clearSession: () => Promise<void>
       onAgentUpdate: (callback: (data: any) => void) => () => void
     }
   }

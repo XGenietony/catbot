@@ -2,12 +2,16 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { mkdir, writeFile, access } from 'fs/promises'
-import { homedir } from 'os'
-import { constants } from 'fs'
-import { registerConfigHandlers } from './handlers/config'
-import { registerFileHandlers } from './handlers/files'
-import { registerAgentHandlers } from './handlers/agent'
+import { mkdir } from 'fs/promises'
+import { registerSettingsHandlers } from './handlers/settings-handler'
+import { registerFileHandlers } from './handlers/files-handler'
+import { registerAgentHandlers } from './handlers/agent-handler'
+import { registerSessionHandlers } from './handlers/session-handler'
+
+import { SystemPromptManager } from './managers/system-prompt-manager'
+import { SettingsManager } from './managers/settings-manager'
+import { SessionManager } from './managers/session-manager'
+import { WORKSPACE_PATH } from './configs'
 
 function createWindow(): void {
   // Create the browser window.
@@ -44,7 +48,7 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -59,35 +63,32 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'))
 
   // Create .catbot/workspace directory
-  const workspacePath = join(homedir(), '.catbot', 'workspace')
-  const identityPath = join(workspacePath, 'IDENTITY.md')
-  const agentsPath = join(workspacePath, 'AGENTS.md')
-  const configPath = join(workspacePath, 'catbot.json')
+  try {
+    await mkdir(WORKSPACE_PATH, { recursive: true })
+    
+    const systemPromptManager = new SystemPromptManager(WORKSPACE_PATH)
+    const settingsManager = new SettingsManager(WORKSPACE_PATH)
+    const sessionManager = new SessionManager(WORKSPACE_PATH)
 
-  const ensureFileExists = async (filePath: string, defaultContent: string): Promise<void> => {
-    try {
-      await access(filePath, constants.F_OK)
-    } catch {
-      await writeFile(filePath, defaultContent, 'utf-8')
-    }
+    // Initialize managers (creates default files if needed)
+    await systemPromptManager.init()
+    await settingsManager.init()
+    await sessionManager.init()
+
+    // IPC Handlers for config files
+    registerSettingsHandlers(systemPromptManager, settingsManager)
+
+    // IPC Handlers for Session
+    registerSessionHandlers(sessionManager)
+
+    // IPC Handlers for Workspace
+    registerFileHandlers(WORKSPACE_PATH)
+
+    // IPC Handler for Agent Loop
+    registerAgentHandlers({ workspacePath: WORKSPACE_PATH, systemPromptManager, settingsManager, sessionManager })
+  } catch (err) {
+    console.error('Failed to initialize workspace:', err)
   }
-
-  mkdir(workspacePath, { recursive: true }).then(async () => {
-    await ensureFileExists(identityPath, '# Identity\n\nYou are a helpful assistant.')
-    await ensureFileExists(agentsPath, '# Agents\n\nNo agents defined.')
-    await ensureFileExists(configPath, '{}')
-  }).catch((err) => {
-    console.error('Failed to create workspace directory:', err)
-  })
-
-  // IPC Handlers for config files
-  registerConfigHandlers(workspacePath)
-
-  // IPC Handlers for Workspace
-  registerFileHandlers(workspacePath)
-
-  // IPC Handler for Agent Loop
-  registerAgentHandlers({ workspacePath, configPath, identityPath })
 
   createWindow()
 

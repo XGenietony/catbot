@@ -7,8 +7,9 @@ const api = {
   writeConfigFile: (fileName: string, content: string) => ipcRenderer.invoke('write-config-file', fileName, content),
   readWorkspaceDir: (subDir: string = '') => ipcRenderer.invoke('read-workspace-dir', subDir),
   openFile: (filePath: string) => ipcRenderer.invoke('open-file', filePath),
-  llmRequest: (messages: { role: string; content: string }[]) => ipcRenderer.invoke('llm-request', messages),
   agentLoop: (messages: any[]) => ipcRenderer.invoke('agent-loop', messages),
+  readSession: () => ipcRenderer.invoke('read-session'),
+  clearSession: () => ipcRenderer.invoke('clear-session'),
   onAgentUpdate: (callback: (data: any) => void) => {
     const listener = (_event, value) => callback(value)
     ipcRenderer.on('agent-update', listener)

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { HashRouter, useLocation } from 'react-router-dom'
-import Sidebar from './components/Sidebar'
-import Chat from './pages/Chat'
-import Skills from './pages/Skills'
-import Settings from './pages/Settings'
-import Workspace from './pages/Workspace'
+import Sidebar from './components/sidebar'
+import Chat from './pages/chat'
+import Skills from './pages/skills'
+import Settings from './pages/settings'
+import Workspace from './pages/workspace'
 
 function MainLayout(): React.JSX.Element {
   const location = useLocation()

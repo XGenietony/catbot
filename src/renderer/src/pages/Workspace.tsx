@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Folder, FileText, File, ArrowLeft, ChevronRight, Home } from 'lucide-react'
+import { Folder, FileText, File, ArrowLeft, ChevronRight, Home, RefreshCw } from 'lucide-react'
 
 interface FileEntry {
   name: string
@@ -73,47 +73,60 @@ export default function Workspace(): React.JSX.Element {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Header / Breadcrumbs */}
-      <div className="flex items-center px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-        <button
-          onClick={handleNavigateUp}
-          disabled={!currentPath}
-          className={`p-1 mr-2 rounded-lg transition-colors ${
-            !currentPath
-              ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-          }`}
-        >
-          <ArrowLeft size={20} />
-        </button>
-
-        <div className="flex items-center text-sm overflow-x-auto no-scrollbar">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+        <div className="flex items-center overflow-hidden">
           <button
-            onClick={() => handleBreadcrumbClick(-1)}
-            className={`flex items-center hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded transition-colors ${
-              !currentPath ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
+            onClick={handleNavigateUp}
+            disabled={!currentPath}
+            className={`p-1 mr-2 rounded-lg transition-colors ${
+              !currentPath
+                ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
-            title="~/.catbot/workspace"
           >
-            <Home size={16} className="mr-1" />
-            Workspace
+            <ArrowLeft size={20} />
           </button>
-          
-          {pathParts.map((part, index) => (
-            <div key={`${index}-${part}`} className="flex items-center">
-              <ChevronRight size={16} className="text-gray-400 mx-1 flex-shrink-0" />
-              <button
-                onClick={() => handleBreadcrumbClick(index)}
-                className={`hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded transition-colors whitespace-nowrap ${
-                  index === pathParts.length - 1
-                    ? 'font-bold text-gray-900 dark:text-white'
-                    : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                {part}
-              </button>
-            </div>
-          ))}
+
+          <div className="flex items-center text-sm overflow-x-auto no-scrollbar">
+            <button
+              onClick={() => handleBreadcrumbClick(-1)}
+              className={`flex items-center hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded transition-colors ${
+                !currentPath ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
+              }`}
+              title="~/.catbot/workspace"
+            >
+              <Home size={16} className="mr-1" />
+              Workspace
+            </button>
+            
+            {pathParts.map((part, index) => (
+              <div key={`${index}-${part}`} className="flex items-center">
+                <ChevronRight size={16} className="text-gray-400 mx-1 flex-shrink-0" />
+                <button
+                  onClick={() => handleBreadcrumbClick(index)}
+                  className={`hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded transition-colors whitespace-nowrap ${
+                    index === pathParts.length - 1
+                      ? 'font-bold text-gray-900 dark:text-white'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  {part}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
+
+        <button
+          onClick={() => loadDirectory(currentPath)}
+          disabled={loading}
+          className={`p-2 ml-2 rounded-lg transition-colors text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 flex-shrink-0 ${
+            loading ? 'animate-spin' : ''
+          }`}
+          title="Refresh"
+        >
+          <RefreshCw size={20} />
+        </button>
       </div>
 
       {/* File List */}
