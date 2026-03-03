@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
 import { UserCog, Loader2, Trash2 } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
+import { ChatMessage } from '../../../common/types'
 import { PersonaModal } from '../components/persona-modal'
-import { Message } from '../components/chat/types'
 import { UserMessage } from '../components/chat/user-message'
 import { AssistantMessage } from '../components/chat/assistant-message'
 import { ToolMessage } from '../components/chat/tool-message'
 
 export default function Chat(): React.JSX.Element {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -42,7 +42,7 @@ export default function Chat(): React.JSX.Element {
       const cleanup = window.api.onAgentUpdate((data) => {
         if (data.type === 'tool_use') {
           // Use the message provided by the backend if available, or construct one
-          const newMessage: Message = data.message || {
+          const newMessage: ChatMessage = data.message || {
             id: uuidv4(),
             content: `Using tool: ${data.tool}`,
             role: 'assistant',
@@ -100,7 +100,7 @@ export default function Chat(): React.JSX.Element {
     
     if (!inputValue.trim() || isLoading) return
 
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: uuidv4(),
       content: inputValue,
       role: 'user',
@@ -120,7 +120,7 @@ export default function Chat(): React.JSX.Element {
       // Call agent loop (it will handle session appending)
       const responseText = await window.api.agentLoop(history)
 
-      const botResponse: Message = {
+      const botResponse: ChatMessage = {
         id: uuidv4(), // This ID will be different from what backend saves... 
         // Ideally backend should return the saved message or ID?
         // But for now we just display. On reload it will sync.
@@ -132,7 +132,7 @@ export default function Chat(): React.JSX.Element {
     } catch (error: unknown) {
       console.error('Chat error:', error)
       const msg = error instanceof Error ? error.message : String(error)
-      const errorMessage: Message = {
+      const errorMessage: ChatMessage = {
         id: uuidv4(),
         content: `Error: ${msg || 'Failed to get response'}`,
         role: 'assistant',

@@ -56,7 +56,7 @@ export default function Sidebar(): React.JSX.Element {
           ))}
         </ul>
 
-        <ul className="space-y-2 px-2 border-t border-gray-200 dark:border-gray-800 pt-4">
+        <ul className="space-y-2 px-2">
           {bottomNavItems.map((item) => (
             <li key={item.path}>
               <NavLink

@@ -1,7 +1,7 @@
-import { Message } from './types'
+import { ChatMessage } from '../../../../common/types'
 
 interface ToolMessageProps {
-  message: Message
+  message: ChatMessage
 }
 
 export function ToolMessage({ message }: ToolMessageProps): React.JSX.Element {

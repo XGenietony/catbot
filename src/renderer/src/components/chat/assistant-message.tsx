@@ -2,10 +2,10 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import 'highlight.js/styles/atom-one-dark.css'
-import { Message } from './types'
+import { ChatMessage } from '../../../../common/types'
 
 interface AssistantMessageProps {
-  message: Message
+  message: ChatMessage
 }
 
 export function AssistantMessage({ message }: AssistantMessageProps): React.JSX.Element {

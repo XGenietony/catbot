@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: catbot
+appId: com.foursix.catbot
+productName: CatBot
 directories:
   buildResources: build
 files:

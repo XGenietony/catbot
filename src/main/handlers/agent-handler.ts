@@ -16,6 +16,7 @@ import { SystemPromptManager } from '../managers/system-prompt-manager'
 import { SettingsManager } from '../managers/settings-manager'
 import { SessionManager } from '../managers/session-manager'
 import { ChatMessage } from '../../common/types'
+import { SYSTEM_PROMPT } from '../prompts/prompt'
 
 const execAsync = promisify(exec)
 
@@ -265,7 +266,7 @@ export function registerAgentHandlers({ workspacePath, systemPromptManager, sett
       }
 
       // 2. Read System Prompt (Identity)
-      const systemPrompt = await systemPromptManager.read('IDENTITY.md')
+      const identityPrompt = await systemPromptManager.read('IDENTITY.md')
 
       // 3. Initialize Client
       const client = new Anthropic({
@@ -287,7 +288,7 @@ export function registerAgentHandlers({ workspacePath, systemPromptManager, sett
       const finalMessages = await agentLoop(messages, {
         client,
         model: modelName || 'claude-3-opus-20240229',
-        system: systemPrompt,
+        system: SYSTEM_PROMPT + '\n' + identityPrompt,
         workspacePath,
         maxSteps: 10, // reasonable default
         onToolUse: async (toolName, input, toolUseId) => {

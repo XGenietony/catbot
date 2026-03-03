@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Settings as SettingsIcon, Monitor, Cpu, Loader2, Save, Eye, EyeOff } from 'lucide-react'
+import { useTheme } from '../components/theme-provider'
 
 interface ModelSettings {
   provider: string
@@ -32,6 +33,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 }
 
 export default function Settings(): React.JSX.Element {
+  const { setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<'model' | 'system'>('model')
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
@@ -102,6 +104,7 @@ export default function Settings(): React.JSX.Element {
       ...prev,
       system: { ...prev.system, theme: value }
     }))
+    setTheme(value)
   }
 
   const updateSystemLanguage = (value: SystemSettings['language']): void => {
