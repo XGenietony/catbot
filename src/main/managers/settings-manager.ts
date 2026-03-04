@@ -1,6 +1,7 @@
 import { join } from 'path'
 import { readFile, writeFile, access } from 'fs/promises'
 import { constants } from 'fs'
+import { WORKSPACE_PATH } from '../configs'
 
 export interface ModelSettings {
   provider: string
@@ -35,8 +36,8 @@ const DEFAULT_CONFIG: AppConfig = {
 export class SettingsManager {
   private configPath: string
 
-  constructor(workspacePath: string) {
-    this.configPath = join(workspacePath, 'catbot.json')
+  constructor() {
+    this.configPath = join(WORKSPACE_PATH, 'catbot.json')
   }
 
   async init(): Promise<void> {

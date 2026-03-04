@@ -19,6 +19,7 @@ import { SessionManager } from '../managers/session-manager'
 import { SkillsManager } from '../managers/skills-manager'
 import { ChatMessage, AgentUpdate } from '../../common/types'
 import { SYSTEM_PROMPT } from '../prompts/prompt'
+import { WORKSPACE_PATH } from '../configs'
 
 const execAsync = promisify(exec)
 
@@ -80,7 +81,6 @@ export interface AgentLoopOptions {
   client: Anthropic
   model: string
   system: string
-  workspacePath: string
   maxTokens?: number
   maxSteps?: number
   onToolUse?: (
@@ -185,8 +185,8 @@ export function createToolHandlers(workspacePath: string): Record<string, ToolHa
         typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
       const filePath = resolveWorkspacePath(
         typeof parsed.path === 'string' ? parsed.path : '',
-        workspacePath,
-        workspacePath
+        WORKSPACE_PATH,
+        WORKSPACE_PATH
       )
       const content = await readFile(filePath, 'utf-8')
       const limit = typeof parsed.limit === 'number' ? parsed.limit : 2000
@@ -197,8 +197,8 @@ export function createToolHandlers(workspacePath: string): Record<string, ToolHa
         typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
       const filePath = resolveWorkspacePath(
         typeof parsed.path === 'string' ? parsed.path : '',
-        workspacePath,
-        workspacePath
+        WORKSPACE_PATH,
+        WORKSPACE_PATH
       )
       const content = typeof parsed.content === 'string' ? parsed.content : ''
       await writeFile(filePath, content, 'utf-8')
@@ -209,8 +209,8 @@ export function createToolHandlers(workspacePath: string): Record<string, ToolHa
         typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
       const filePath = resolveWorkspacePath(
         typeof parsed.path === 'string' ? parsed.path : '',
-        workspacePath,
-        workspacePath
+        WORKSPACE_PATH,
+        WORKSPACE_PATH
       )
       const oldText = typeof parsed.old_text === 'string' ? parsed.old_text : ''
       const newText = typeof parsed.new_text === 'string' ? parsed.new_text : ''
@@ -274,7 +274,7 @@ export async function agentLoop(
     }
   }
 
-  const handlers = createToolHandlers(opts.workspacePath)
+  const handlers = createToolHandlers(WORKSPACE_PATH)
   const maxSteps = typeof opts.maxSteps === 'number' ? opts.maxSteps : 20
   const maxTokens = typeof opts.maxTokens === 'number' ? opts.maxTokens : 8000
 
@@ -342,12 +342,11 @@ interface AgentHandlerOptions {
 }
 
 export function registerAgentHandlers({
-  workspacePath,
   promptManager,
   settingsManager,
   sessionManager
 }: AgentHandlerOptions): void {
-  const skillsManager = new SkillsManager(workspacePath)
+  const skillsManager = new SkillsManager()
 
   // IPC Handler for Agent Loop
   ipcMain.handle('agent-loop', async (_, messages: ChatMessage[]) => {
@@ -411,7 +410,6 @@ export function registerAgentHandlers({
         client,
         model: modelName || 'claude-3-opus-20240229',
         system,
-        workspacePath,
         maxSteps: 50, // reasonable default
         onToolUse: async (toolName, input, toolUseId) => {
           try {

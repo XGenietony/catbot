@@ -1,12 +1,13 @@
 import { ipcMain, shell } from 'electron'
 import { join, sep } from 'path'
 import { readdir } from 'fs/promises'
+import { WORKSPACE_PATH } from '../configs'
 
-export function registerFileHandlers(workspacePath: string): void {
+export function registerFileHandlers(): void {
   ipcMain.handle('read-workspace-dir', async (_, subDir: string = '') => {
     // Prevent directory traversal
-    const targetPath = join(workspacePath, subDir)
-    if (targetPath !== workspacePath && !targetPath.startsWith(workspacePath + sep)) {
+    const targetPath = join(WORKSPACE_PATH, subDir)
+    if (targetPath !== WORKSPACE_PATH && !targetPath.startsWith(WORKSPACE_PATH + sep)) {
       throw new Error('Access denied')
     }
 
@@ -33,8 +34,8 @@ export function registerFileHandlers(workspacePath: string): void {
 
   ipcMain.handle('open-file', async (_, filePath: string) => {
     // Prevent directory traversal
-    const fullPath = join(workspacePath, filePath)
-    if (fullPath !== workspacePath && !fullPath.startsWith(workspacePath + sep)) {
+    const fullPath = join(WORKSPACE_PATH, filePath)
+    if (fullPath !== WORKSPACE_PATH && !fullPath.startsWith(WORKSPACE_PATH + sep)) {
       throw new Error('Access denied')
     }
     await shell.openPath(fullPath)

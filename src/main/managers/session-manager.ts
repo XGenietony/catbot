@@ -1,13 +1,14 @@
 import { join } from 'path'
 import { readFile, appendFile, writeFile, access } from 'fs/promises'
 import { constants } from 'fs'
+import { WORKSPACE_PATH } from '../configs'
 import { ChatMessage } from '../../common/types'
 
 export class SessionManager {
   private sessionPath: string
 
-  constructor(workspacePath: string) {
-    this.sessionPath = join(workspacePath, 'session.jsonl')
+  constructor() {
+    this.sessionPath = join(WORKSPACE_PATH, 'session.jsonl')
   }
 
   async init(): Promise<void> {

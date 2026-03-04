@@ -1,6 +1,7 @@
 import { join, delimiter } from 'node:path'
 import { readdir, readFile, access } from 'node:fs/promises'
 import { constants } from 'node:fs'
+import { WORKSPACE_PATH } from '../configs'
 
 export type SkillSource = 'workspace' | 'builtin'
 
@@ -16,8 +17,8 @@ export class SkillsManager {
   private workspaceSkillsDir: string
   private builtinSkillsDir: string
 
-  constructor(workspacePath: string, builtinSkillsDir?: string) {
-    this.workspaceSkillsDir = join(workspacePath, 'skills')
+  constructor(builtinSkillsDir?: string) {
+    this.workspaceSkillsDir = join(WORKSPACE_PATH, 'skills')
     this.builtinSkillsDir = builtinSkillsDir ?? join(__dirname, '..', 'skills')
   }
 

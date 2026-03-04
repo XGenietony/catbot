@@ -7,8 +7,8 @@ export interface SkillListItem {
   source: 'workspace' | 'builtin'
 }
 
-export function registerSkillsHandlers(workspacePath: string): void {
-  const skillsManager = new SkillsManager(workspacePath)
+export function registerSkillsHandlers(): void {
+  const skillsManager = new SkillsManager()
 
   ipcMain.handle('list-skills', async (_event, opts?: { filterUnavailable?: boolean }) => {
     const filterUnavailable =

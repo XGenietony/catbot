@@ -1,15 +1,16 @@
 import { join } from 'path'
 import { readFile, writeFile, access } from 'fs/promises'
 import { constants } from 'fs'
+import { WORKSPACE_PATH } from '../configs'
 import { DEFAULT_AGENTS_MD, DEFAULT_IDENTITY_MD } from '../prompts/default'
 
 export class PromptManager {
   private identityPath: string
   private agentsPath: string
 
-  constructor(workspacePath: string) {
-    this.identityPath = join(workspacePath, 'IDENTITY.md')
-    this.agentsPath = join(workspacePath, 'AGENTS.md')
+  constructor() {
+    this.identityPath = join(WORKSPACE_PATH, 'IDENTITY.md')
+    this.agentsPath = join(WORKSPACE_PATH, 'AGENTS.md')
   }
 
   async init(): Promise<void> {
