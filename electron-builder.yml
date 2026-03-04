@@ -28,6 +28,10 @@ mac:
   notarize: false
   identity: null
   hardenedRuntime: false
+  target:
+    - target: default
+      arch:
+        - universal
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:
