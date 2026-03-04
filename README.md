@@ -1,6 +1,6 @@
 # CatBot
 
-Like OpenClaw, but zero setup required.
+A Desktop Agent App. Like OpenClaw, but with zero setup required.
 
 ## Project Setup
 
