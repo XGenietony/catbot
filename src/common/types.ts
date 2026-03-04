@@ -28,3 +28,12 @@ export interface AgentToolResultUpdate {
 }
 
 export type AgentUpdate = AgentToolUseUpdate | AgentToolResultUpdate
+
+export type SkillSource = 'workspace' | 'builtin'
+
+export interface SkillInfo {
+  name: string
+  description?: string
+  path?: string
+  source: SkillSource
+}

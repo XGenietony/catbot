@@ -2,14 +2,7 @@ import { join, delimiter } from 'node:path'
 import { readdir, readFile, access } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { WORKSPACE_PATH } from '../configs'
-
-export type SkillSource = 'workspace' | 'builtin'
-
-export interface SkillInfo {
-  name: string
-  path: string
-  source: SkillSource
-}
+import { SkillInfo } from '../../common/types'
 
 type SkillMeta = Record<string, unknown>
 

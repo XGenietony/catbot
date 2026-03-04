@@ -1,16 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { RotateCw } from 'lucide-react'
-
-type SkillListItem = {
-  name: string
-  description: string
-  source: 'workspace' | 'builtin'
-}
+import { SkillInfo } from '../../../common/types'
 
 export default function Skills(): React.JSX.Element {
   const location = useLocation()
-  const [skills, setSkills] = useState<SkillListItem[]>([])
+  const [skills, setSkills] = useState<SkillInfo[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
