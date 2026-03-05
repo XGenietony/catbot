@@ -89,9 +89,9 @@ app.whenReady().then(async () => {
   try {
     await mkdir(WORKSPACE_PATH, { recursive: true })
 
-    const promptManager = new PromptManager(WORKSPACE_PATH)
-    const settingsManager = new SettingsManager(WORKSPACE_PATH)
-    const sessionManager = new SessionManager(WORKSPACE_PATH)
+    const promptManager = new PromptManager()
+    const settingsManager = new SettingsManager()
+    const sessionManager = new SessionManager()
 
     // Initialize managers (creates default files if needed)
     await promptManager.init()
@@ -106,10 +106,10 @@ app.whenReady().then(async () => {
     registerSessionHandlers(sessionManager)
 
     // IPC Handlers for Workspace
-    registerFileHandlers(WORKSPACE_PATH)
+    registerFileHandlers()
 
     // IPC Handlers for Skills
-    registerSkillsHandlers(WORKSPACE_PATH)
+    registerSkillsHandlers()
 
     // IPC Handler for Agent Loop
     registerAgentHandlers({

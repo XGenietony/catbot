@@ -24,6 +24,12 @@ const api = {
   },
   readWorkspaceDir: (subDir: string = '') => ipcRenderer.invoke('read-workspace-dir', subDir),
   openFile: (filePath: string) => ipcRenderer.invoke('open-file', filePath),
+  openSkillsDir: () => ipcRenderer.invoke('open-skills-dir'),
+  installSkillGit: (gitUrl: string) => ipcRenderer.invoke('install-skill-git', gitUrl),
+  installSkillZip: (zipPath: string, force?: boolean) =>
+    ipcRenderer.invoke('install-skill-zip', zipPath, force),
+  selectSkillZip: () => ipcRenderer.invoke('select-skill-zip'),
+  deleteSkill: (name: string) => ipcRenderer.invoke('delete-skill', name),
   agentLoop: (messages: ChatMessage[]) => ipcRenderer.invoke('agent-loop', messages),
   readSession: () => ipcRenderer.invoke('read-session'),
   clearSession: () => ipcRenderer.invoke('clear-session'),
