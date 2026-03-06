@@ -1,7 +1,7 @@
 {
   "name": "catbot",
-  "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "version": "1.0.1",
+  "description": "A Desktop Agent App. Like OpenClaw, but with zero setup required.",
   "main": "./out/main/index.js",
   "author": "FourSix",
   "homepage": "https://electron-vite.org",

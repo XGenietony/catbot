@@ -278,6 +278,9 @@ export async function agentLoop(
   const maxSteps = typeof opts.maxSteps === 'number' ? opts.maxSteps : 20
   const maxTokens = typeof opts.maxTokens === 'number' ? opts.maxTokens : 8000
 
+  console.log(`[agentLoop] system=${opts.system}`)
+  console.log(`[agentLoop] messages=${JSON.stringify(messages)}`)
+
   for (let step = 0; step < maxSteps; step++) {
     console.log(`[agentLoop] step=${step + 1}/${maxSteps} messages=${messages.length}`)
     const response = await opts.client.messages.create({
@@ -395,7 +398,16 @@ export function registerAgentHandlers({
       const alwaysSkills = await skillsManager.getAlwaysSkills()
       const alwaysSkillsContent = await skillsManager.loadSkillsForContext(alwaysSkills)
       const skillsContext = [skillsSummary, alwaysSkillsContent].filter(Boolean).join('\n\n')
-      const system = [SYSTEM_PROMPT, identityPrompt, agentsPrompt, skillsContext]
+      const system = [
+        SYSTEM_PROMPT,
+        identityPrompt,
+        agentsPrompt,
+        `# Skills
+The following skills extend your capabilities. To use a skill, read its SKILL.md file using the load_skill tool.
+Skills with available="false" need dependencies installed first - you can try installing them with apt/brew.
+All skill executions must be performed strictly within the directory specified by the <location>{path}</location>.
+${skillsContext}`
+      ]
         .filter(Boolean)
         .join('\n\n')
 
