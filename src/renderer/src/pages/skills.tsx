@@ -103,11 +103,6 @@ export default function Skills(): React.JSX.Element {
                     <h2 className="font-semibold text-gray-900 dark:text-white truncate">
                       {skill.name}
                     </h2>
-                    {skill.source === 'builtin' && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-200 border border-blue-200 dark:border-blue-900">
-                        内置
-                      </span>
-                    )}
                   </div>
                   {skill.description ? (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -118,7 +113,7 @@ export default function Skills(): React.JSX.Element {
                   )}
                 </div>
                 <span className="text-xs text-gray-500 dark:text-gray-500 shrink-0">
-                  {skill.source === 'workspace' ? 'workspace' : 'builtin'}
+                  {skill.source === 'home' ? '~/.agents/skills' : skill.source}
                 </span>
               </div>
               {skill.source === 'workspace' && (

@@ -5,7 +5,7 @@ import { AgentUpdate, ChatMessage } from '../common/types'
 export interface SkillListItem {
   name: string
   description: string
-  source: 'workspace' | 'builtin'
+  source: 'workspace' | 'home' | 'builtin'
 }
 
 // Custom APIs for renderer
@@ -25,7 +25,6 @@ const api = {
   readWorkspaceDir: (subDir: string = '') => ipcRenderer.invoke('read-workspace-dir', subDir),
   openFile: (filePath: string) => ipcRenderer.invoke('open-file', filePath),
   openSkillsDir: () => ipcRenderer.invoke('open-skills-dir'),
-  installSkillGit: (gitUrl: string) => ipcRenderer.invoke('install-skill-git', gitUrl),
   installSkillZip: (zipPath: string, force?: boolean) =>
     ipcRenderer.invoke('install-skill-zip', zipPath, force),
   selectSkillZip: () => ipcRenderer.invoke('select-skill-zip'),

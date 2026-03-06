@@ -10,7 +10,7 @@ interface FileEntry {
 interface SkillListItem {
   name: string
   description: string
-  source: 'workspace' | 'builtin'
+  source: 'workspace' | 'home' | 'builtin'
 }
 
 declare global {
@@ -22,7 +22,6 @@ declare global {
       readWorkspaceDir: (subDir?: string) => Promise<FileEntry[]>
       openFile: (filePath: string) => Promise<void>
       openSkillsDir: () => Promise<void>
-      installSkillGit: (gitUrl: string) => Promise<void>
       installSkillZip: (zipPath: string, force?: boolean) => Promise<string>
       selectSkillZip: () => Promise<string | null>
       deleteSkill: (name: string) => Promise<void>

@@ -5,11 +5,11 @@ import { SkillsManager } from '../managers/skills-manager'
 export interface SkillListItem {
   name: string
   description: string
-  source: 'workspace' | 'builtin'
+  source: 'workspace' | 'home' | 'builtin'
 }
 
-export function registerSkillsHandlers(): void {
-  const skillsManager = new SkillsManager()
+export function registerSkillsHandlers(existingSkillsManager?: SkillsManager): void {
+  const skillsManager = existingSkillsManager ?? new SkillsManager()
 
   ipcMain.handle('open-skills-dir', async () => {
     const skillsDir = skillsManager.getWorkspaceSkillsDir()
@@ -33,10 +33,6 @@ export function registerSkillsHandlers(): void {
     }
   )
 
-  ipcMain.handle('install-skill-git', async (_, gitUrl: string) => {
-    await skillsManager.installSkillFromGit(gitUrl)
-  })
-
   ipcMain.handle('delete-skill', async (_, name: string) => {
     await skillsManager.deleteSkill(name)
   })
@@ -57,7 +53,12 @@ export function registerSkillsHandlers(): void {
     }
 
     items.sort((a, b) => {
-      if (a.source !== b.source) return a.source === 'workspace' ? -1 : 1
+      const priority: Record<SkillListItem['source'], number> = {
+        workspace: 0,
+        home: 1,
+        builtin: 2
+      }
+      if (a.source !== b.source) return priority[a.source] - priority[b.source]
       return a.name.localeCompare(b.name)
     })
 

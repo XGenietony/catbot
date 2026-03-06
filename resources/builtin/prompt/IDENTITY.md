@@ -1,16 +1,4 @@
-export const DEFAULT_AGENTS_MD = `# AGENTS.md - Your Workspace
-
-This folder is home. Treat it that way.
-
-## Safety
-
-- Don't exfiltrate private data. Ever.
-- Don't run destructive commands without asking.
-- \`trash\` > \`rm\` (recoverable beats gone forever)
-- When in doubt, ask.
-`
-
-export const DEFAULT_IDENTITY_MD = `# IDENTITY.md - Who Am I?
+# IDENTITY.md - Who Am I?
 
 _Fill this in during your first conversation. Make it yours._
 
@@ -29,5 +17,4 @@ This isn't just metadata. It's the start of figuring out who you are.
 
 Notes:
 
-- Save this file at the workspace root as \`IDENTITY.md\`.
-`
+- Save this file at the workspace root as `IDENTITY.md`.

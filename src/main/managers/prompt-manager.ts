@@ -1,28 +1,37 @@
 import { join } from 'path'
-import { readFile, writeFile, access } from 'fs/promises'
+import { readFile, writeFile, copyFile, access } from 'fs/promises'
 import { constants } from 'fs'
-import { WORKSPACE_PATH } from '../configs'
-import { DEFAULT_AGENTS_MD, DEFAULT_IDENTITY_MD } from '../prompts/default'
+import { WORKSPACE_PATH, BUILTIN_PATH } from '../configs'
 
 export class PromptManager {
   private identityPath: string
   private agentsPath: string
+  private builtinIdentityPath: string
+  private builtinAgentsPath: string
 
   constructor() {
     this.identityPath = join(WORKSPACE_PATH, 'IDENTITY.md')
     this.agentsPath = join(WORKSPACE_PATH, 'AGENTS.md')
+    this.builtinIdentityPath = join(BUILTIN_PATH, 'prompt', 'IDENTITY.md')
+    this.builtinAgentsPath = join(BUILTIN_PATH, 'prompt', 'AGENTS.md')
   }
 
   async init(): Promise<void> {
-    await this.ensureFileExists(this.identityPath, DEFAULT_IDENTITY_MD)
-    await this.ensureFileExists(this.agentsPath, DEFAULT_AGENTS_MD)
+    await this.ensureFileExists(this.identityPath, this.builtinIdentityPath)
+    await this.ensureFileExists(this.agentsPath, this.builtinAgentsPath)
   }
 
-  private async ensureFileExists(filePath: string, defaultContent: string): Promise<void> {
+  private async ensureFileExists(targetPath: string, sourcePath: string): Promise<void> {
     try {
-      await access(filePath, constants.F_OK)
+      await access(targetPath, constants.F_OK)
     } catch {
-      await writeFile(filePath, defaultContent, 'utf-8')
+      try {
+        await copyFile(sourcePath, targetPath)
+      } catch (error) {
+        console.warn(`Failed to copy prompt from ${sourcePath} to ${targetPath}`, error)
+        // Create empty file if copy fails to avoid errors downstream
+        await writeFile(targetPath, '', 'utf-8')
+      }
     }
   }
 
@@ -30,17 +39,9 @@ export class PromptManager {
     const filePath = fileName === 'IDENTITY.md' ? this.identityPath : this.agentsPath
     try {
       return await readFile(filePath, 'utf-8')
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error: unknown) {
-      const code =
-        typeof error === 'object' && error !== null && 'code' in error
-          ? (error as { code?: unknown }).code
-          : undefined
-      if (code === 'ENOENT') {
-        const defaultContent = fileName === 'IDENTITY.md' ? DEFAULT_IDENTITY_MD : DEFAULT_AGENTS_MD
-        await writeFile(filePath, defaultContent, 'utf-8')
-        return defaultContent
-      }
-      throw error
+      return ''
     }
   }
 

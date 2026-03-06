@@ -128,7 +128,7 @@ function limitText(text: string, limit: number): string {
 }
 
 export function createToolHandlers(workspacePath: string): Record<string, ToolHandler> {
-  const skillsManager = new SkillsManager(workspacePath)
+  const skillsManager = new SkillsManager()
 
   return {
     bash: async (input: unknown) => {

@@ -1,10 +1,10 @@
 import { join, delimiter, basename, parse } from 'node:path'
-import { readdir, readFile, access, mkdir, mkdtemp, rm, lstat, cp } from 'node:fs/promises'
+import { readdir, readFile, access, mkdir, mkdtemp, rm, lstat, cp, copyFile } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
-import { tmpdir } from 'node:os'
-import { WORKSPACE_PATH } from '../configs'
+import { tmpdir, homedir } from 'node:os'
+import { WORKSPACE_PATH, SKILLS_PATH, BUILTIN_PATH } from '../configs'
 import { SkillInfo } from '../../common/types'
 
 const execAsync = promisify(exec)
@@ -13,75 +13,41 @@ type SkillMeta = Record<string, unknown>
 
 export class SkillsManager {
   private workspaceSkillsDir: string
+  private homeSkillsDir: string
   private builtinSkillsDir: string
+  private bundledSkillsDir: string
 
-  constructor(builtinSkillsDir?: string) {
+  constructor() {
     this.workspaceSkillsDir = join(WORKSPACE_PATH, 'skills')
-    this.builtinSkillsDir = builtinSkillsDir ?? join(__dirname, '..', 'skills')
+    this.homeSkillsDir = join(homedir(), '.agents', 'skills')
+    this.builtinSkillsDir = SKILLS_PATH
+    this.bundledSkillsDir = join(BUILTIN_PATH, 'skills')
   }
 
-  async installSkillFromGit(gitUrl: string): Promise<void> {
-    if (!gitUrl.trim()) throw new Error('Git URL is required')
-
-    // Extract repository name from URL
-    let repoName = basename(gitUrl)
-    if (repoName.endsWith('.git')) {
-      repoName = repoName.slice(0, -4)
-    }
-
-    const tempDir = await mkdtemp(join(tmpdir(), 'catbot-skill-git-'))
-
+  async init(): Promise<void> {
+    await mkdir(this.builtinSkillsDir, { recursive: true })
     try {
-      await execAsync(`git clone "${gitUrl}" "${tempDir}"`)
+      await this.copyDirRecursive(this.bundledSkillsDir, this.builtinSkillsDir)
+    } catch (e) {
+      console.warn('Failed to copy builtin skills', e)
+    }
+  }
 
-      let destName = repoName
-      // Check for SKILL.md to determine the skill name
-      const skillMdPath = join(tempDir, 'SKILL.md')
-      if (await this.pathExists(skillMdPath)) {
-        try {
-          const content = await readFile(skillMdPath, 'utf-8')
-          const metadata = this.parseSkillFrontmatter(content)
-          if (metadata['name']) {
-            const metaName = metadata['name'].trim()
-            if (metaName && !metaName.includes('/') && !metaName.includes('\\')) {
-              destName = metaName
-            }
-          }
-        } catch {
-          // Ignore
-        }
+  private async copyDirRecursive(src: string, dest: string): Promise<void> {
+    await mkdir(dest, { recursive: true })
+    const entries = await readdir(src, { withFileTypes: true })
+
+    for (const entry of entries) {
+      const srcPath = join(src, entry.name)
+      const destPath = join(dest, entry.name)
+
+      if (entry.isDirectory()) {
+        if (await this.pathExists(destPath)) continue
+        await this.copyDirRecursive(srcPath, destPath)
+      } else {
+        if (await this.pathExists(destPath)) continue
+        await copyFile(srcPath, destPath)
       }
-
-      // Ensure workspace skills directory exists
-      await mkdir(this.workspaceSkillsDir, { recursive: true })
-
-      const targetPath = join(this.workspaceSkillsDir, destName)
-
-      if (await this.pathExists(targetPath)) {
-        throw new Error(`Skill "${destName}" already exists`)
-      }
-
-      // Move (copy then remove temp)
-      await cp(tempDir, targetPath, { recursive: true })
-
-      // Install dependencies
-      const packageJsonPath = join(targetPath, 'package.json')
-      if (await this.pathExists(packageJsonPath)) {
-        try {
-          await execAsync('pnpm install', { cwd: targetPath })
-        } catch (error) {
-          await rm(targetPath, { recursive: true, force: true }).catch(() => {})
-          throw new Error(
-            `Failed to install dependencies: ${error instanceof Error ? error.message : String(error)}`
-          )
-        }
-      }
-    } catch (error) {
-      throw new Error(
-        `Failed to install skill from git: ${error instanceof Error ? error.message : String(error)}`
-      )
-    } finally {
-      await rm(tempDir, { recursive: true, force: true }).catch(() => {})
     }
   }
 
@@ -203,6 +169,19 @@ export class SkillsManager {
       }
     }
 
+    if (await this.pathExists(this.homeSkillsDir)) {
+      const entries = await readdir(this.homeSkillsDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue
+        const name = entry.name
+        if (skills.some((s) => s.name === name)) continue
+        const skillFile = join(this.homeSkillsDir, name, 'SKILL.md')
+        if (await this.pathExists(skillFile)) {
+          skills.push({ name, path: skillFile, source: 'home' })
+        }
+      }
+    }
+
     if (await this.pathExists(this.builtinSkillsDir)) {
       const entries = await readdir(this.builtinSkillsDir, { withFileTypes: true })
       for (const entry of entries) {
@@ -232,6 +211,11 @@ export class SkillsManager {
     const workspaceSkill = join(this.workspaceSkillsDir, name, 'SKILL.md')
     if (await this.pathExists(workspaceSkill)) {
       return await readFile(workspaceSkill, 'utf-8')
+    }
+
+    const homeSkill = join(this.homeSkillsDir, name, 'SKILL.md')
+    if (await this.pathExists(homeSkill)) {
+      return await readFile(homeSkill, 'utf-8')
     }
 
     const builtinSkill = join(this.builtinSkillsDir, name, 'SKILL.md')

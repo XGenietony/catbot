@@ -29,7 +29,7 @@ export interface AgentToolResultUpdate {
 
 export type AgentUpdate = AgentToolUseUpdate | AgentToolResultUpdate
 
-export type SkillSource = 'workspace' | 'builtin'
+export type SkillSource = 'workspace' | 'home' | 'builtin'
 
 export interface SkillInfo {
   name: string

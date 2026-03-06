@@ -14,7 +14,12 @@ import { registerSkillsHandlers } from './handlers/skills-handler'
 import { PromptManager } from './managers/prompt-manager'
 import { SettingsManager } from './managers/settings-manager'
 import { SessionManager } from './managers/session-manager'
+import { SkillsManager } from './managers/skills-manager'
 import { WORKSPACE_PATH } from './configs'
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fixPath = require('fix-path').default
+fixPath()
 
 function createWindow(): void {
   // Create the browser window.
@@ -92,11 +97,13 @@ app.whenReady().then(async () => {
     const promptManager = new PromptManager()
     const settingsManager = new SettingsManager()
     const sessionManager = new SessionManager()
+    const skillsManager = new SkillsManager()
 
     // Initialize managers (creates default files if needed)
     await promptManager.init()
     await settingsManager.init()
     await sessionManager.init()
+    await skillsManager.init()
 
     // IPC Handlers for config files
     registerPromptHandlers(promptManager)
@@ -109,7 +116,7 @@ app.whenReady().then(async () => {
     registerFileHandlers()
 
     // IPC Handlers for Skills
-    registerSkillsHandlers()
+    registerSkillsHandlers(skillsManager)
 
     // IPC Handler for Agent Loop
     registerAgentHandlers({
