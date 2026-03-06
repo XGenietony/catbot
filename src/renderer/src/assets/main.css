@@ -2,3 +2,11 @@
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+button, a {
+  -webkit-app-region: no-drag;
+}

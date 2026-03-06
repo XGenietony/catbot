@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { RotateCw, FolderOpen, Plus, Trash2 } from 'lucide-react'
+import { FolderOpen, Plus, Trash2, RefreshCw } from 'lucide-react'
 import { SkillInfo } from '../../../common/types'
 import { AddSkillModal } from '../components/add-skill-modal'
 
@@ -54,49 +54,54 @@ export default function Skills(): React.JSX.Element {
   }, [location.pathname, loadSkills])
 
   return (
-    <div className="p-4 h-full overflow-auto">
-      <div className="flex justify-end mb-4">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+      <div className="flex items-center justify-end px-4 py-2 bg-gray-50 dark:bg-gray-800/50">
+        {/* Strut to match Workspace header height (text-sm + py-1) */}
+        <span className="text-sm py-1 invisible w-0">|</span>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="p-2 mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
+          className="p-1 mr-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
           title="Add Skill"
         >
-          <Plus size={20} />
+          <Plus size={16} />
         </button>
         <button
           onClick={() => window.api.openSkillsDir()}
-          className="p-2 mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
+          className="p-1 mr-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
           title="Open Skills Directory"
         >
-          <FolderOpen size={20} />
+          <FolderOpen size={16} />
         </button>
         <button
           onClick={loadSkills}
           disabled={isLoading}
-          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
+          className={`p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer ${
+            isLoading ? 'animate-spin' : ''
+          }`}
           title="Refresh Skills"
         >
-          <RotateCw size={20} className={isLoading ? 'animate-spin' : ''} />
+          <RefreshCw size={16} />
         </button>
       </div>
 
-      {isLoading && <div className="text-gray-600 dark:text-gray-400 text-sm">Loading...</div>}
+      <div className="flex-1 overflow-auto p-4">
+        {isLoading && <div className="text-gray-600 dark:text-gray-400 text-sm">Loading...</div>}
 
-      {!isLoading && error && (
-        <div className="text-sm text-red-600 dark:text-red-400">Error: {error}</div>
-      )}
+        {!isLoading && error && (
+          <div className="text-sm text-red-600 dark:text-red-400">Error: {error}</div>
+        )}
 
-      {!isLoading && !error && skills.length === 0 && (
-        <div className="text-gray-600 dark:text-gray-400 text-sm">暂无技能</div>
-      )}
+        {!isLoading && !error && skills.length === 0 && (
+          <div className="text-gray-600 dark:text-gray-400 text-sm">暂无技能</div>
+        )}
 
-      {!isLoading && !error && skills.length > 0 && (
-        <div className="space-y-3">
-          {skills.map((skill) => (
-            <div
-              key={`${skill.source}:${skill.name}`}
-              className="group relative border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-900"
-            >
+        {!isLoading && !error && skills.length > 0 && (
+          <div className="space-y-3">
+            {skills.map((skill) => (
+              <div
+                key={`${skill.source}:${skill.name}`}
+                className="group relative border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-900"
+              >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -133,6 +138,8 @@ export default function Skills(): React.JSX.Element {
           ))}
         </div>
       )}
+
+      </div>
 
       <AddSkillModal
         isOpen={isAddModalOpen}

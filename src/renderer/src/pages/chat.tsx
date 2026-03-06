@@ -7,6 +7,7 @@ import { PersonaModal } from '../components/persona-modal'
 import { UserMessage } from '../components/chat/user-message'
 import { AssistantMessage } from '../components/chat/assistant-message'
 import { ToolMessage } from '../components/chat/tool-message'
+import { ThinkingMessage } from '../components/chat/thinking-message'
 
 export default function Chat(): React.JSX.Element {
   const navigate = useNavigate()
@@ -213,27 +214,6 @@ export default function Chat(): React.JSX.Element {
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 text-gray-900 dark:text-white relative">
-      {/* Header */}
-      <header className="flex-none p-4 border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur flex justify-between items-center">
-        <h1 className="text-xl font-bold">CatBot Chat</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={handleClearSession}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hover:text-red-500 dark:hover:text-red-400 cursor-pointer"
-            title="Clear Session"
-          >
-            <Trash2 size={20} />
-          </button>
-          <button
-            onClick={() => setIsPersonaModalOpen(true)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors cursor-pointer"
-            title="Set Persona"
-          >
-            <UserCog size={20} />
-          </button>
-        </div>
-      </header>
-
       {/* Persona Modal */}
       <PersonaModal isOpen={isPersonaModalOpen} onClose={() => setIsPersonaModalOpen(false)} />
 
@@ -248,46 +228,63 @@ export default function Chat(): React.JSX.Element {
           }
           return <AssistantMessage key={message.id} message={message} />
         })}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-bl-none px-4 py-3 flex items-center gap-2">
-              <Loader2 className="animate-spin text-gray-400" size={16} />
-              <span className="text-sm text-gray-500 dark:text-gray-400">Thinking...</span>
-            </div>
-          </div>
-        )}
+        {isLoading && <ThinkingMessage />}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
-      <div className="flex-none p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <form onSubmit={handleSendMessage} className="flex gap-2 items-end">
-          <textarea
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            spellCheck={false}
-            autoCorrect="off"
-            autoCapitalize="off"
-            className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 resize-none h-14"
-            autoFocus
-          />
-          <button
-            type="submit"
-            disabled={!inputValue.trim() || isLoading}
-            className="h-14 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-          >
-            {isLoading ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              <>
-                <span>Send</span>
-                <SendIcon size={18} />
-              </>
-            )}
-          </button>
+      <div className="flex-none px-4 pb-4 bg-white dark:bg-gray-900">
+        <form onSubmit={handleSendMessage} className="relative">
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg transition-all border border-gray-200 dark:border-gray-700">
+            <textarea
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message..."
+              spellCheck={false}
+              autoCorrect="off"
+              autoCapitalize="off"
+              className="w-full bg-transparent text-gray-900 dark:text-white px-4 py-3 focus:outline-none resize-none min-h-[80px] max-h-[200px]"
+              autoFocus
+            />
+
+            <div className="flex justify-between items-center px-2 pb-2">
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={handleClearSession}
+                  className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors hover:text-red-500 dark:hover:text-red-400 cursor-pointer"
+                  title="Clear Session"
+                >
+                  <Trash2 size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPersonaModalOpen(true)}
+                  className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors cursor-pointer"
+                  title="Set Persona"
+                >
+                  <UserCog size={18} />
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                disabled={!inputValue.trim() || isLoading}
+                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+              >
+                {isLoading ? (
+                  <Loader2 className="animate-spin" size={16} />
+                ) : (
+                  <>
+                    <span>Send</span>
+                    <SendIcon size={16} />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </div>

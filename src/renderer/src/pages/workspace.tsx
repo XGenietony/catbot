@@ -85,7 +85,7 @@ export default function Workspace(): React.JSX.Element {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Header / Breadcrumbs */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800/50">
         <div className="flex items-center overflow-hidden">
           <button
             onClick={handleNavigateUp}
@@ -96,13 +96,13 @@ export default function Workspace(): React.JSX.Element {
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer'
             }`}
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={16} />
           </button>
 
           <div className="flex items-center text-sm overflow-x-auto no-scrollbar">
             <button
               onClick={() => handleBreadcrumbClick(-1)}
-              className={`flex items-center hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded transition-colors cursor-pointer ${
+              className={`flex items-center hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
                 !currentPath
                   ? 'font-bold text-gray-900 dark:text-white'
                   : 'text-gray-500 dark:text-gray-400'
@@ -118,7 +118,7 @@ export default function Workspace(): React.JSX.Element {
                 <ChevronRight size={16} className="text-gray-400 mx-1 shrink-0" />
                 <button
                   onClick={() => handleBreadcrumbClick(index)}
-                  className={`hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded transition-colors whitespace-nowrap cursor-pointer ${
+                  className={`hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
                     index === pathParts.length - 1
                       ? 'font-bold text-gray-900 dark:text-white'
                       : 'text-gray-500 dark:text-gray-400'
@@ -134,12 +134,12 @@ export default function Workspace(): React.JSX.Element {
         <button
           onClick={() => loadDirectory(currentPath)}
           disabled={loading}
-          className={`p-2 ml-2 rounded-lg transition-colors text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 shrink-0 cursor-pointer ${
+          className={`p-1 ml-2 rounded-lg transition-colors text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 shrink-0 cursor-pointer ${
             loading ? 'animate-spin' : ''
           }`}
           title="Refresh"
         >
-          <RefreshCw size={20} />
+          <RefreshCw size={16} />
         </button>
       </div>
 

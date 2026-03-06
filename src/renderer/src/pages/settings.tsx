@@ -141,7 +141,7 @@ export default function Settings(): React.JSX.Element {
         <nav className="flex-1 px-2 space-y-1">
           <button
             onClick={() => setActiveTab('model')}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
               activeTab === 'model'
                 ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -152,7 +152,7 @@ export default function Settings(): React.JSX.Element {
           </button>
           <button
             onClick={() => setActiveTab('system')}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
               activeTab === 'system'
                 ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -182,7 +182,7 @@ export default function Settings(): React.JSX.Element {
                       <select
                         value={settings.model.provider}
                         onChange={(e) => updateModelSetting('provider', e.target.value)}
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
                       >
                         <option value="openai">OpenAI</option>
                         <option value="anthropic">Anthropic</option>
@@ -201,12 +201,12 @@ export default function Settings(): React.JSX.Element {
                           value={settings.model.apiKey}
                           onChange={(e) => updateModelSetting('apiKey', e.target.value)}
                           placeholder="sk-..."
-                          className="w-full px-3 py-2 pr-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                          className="w-full px-3 py-2 pr-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
                         />
                         <button
                           type="button"
                           onClick={() => setShowApiKey(!showApiKey)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                         >
                           {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
@@ -222,7 +222,7 @@ export default function Settings(): React.JSX.Element {
                         value={settings.model.modelName}
                         onChange={(e) => updateModelSetting('modelName', e.target.value)}
                         placeholder="gpt-4o"
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
                       />
                     </div>
 
@@ -235,7 +235,7 @@ export default function Settings(): React.JSX.Element {
                         value={settings.model.baseUrl}
                         onChange={(e) => updateModelSetting('baseUrl', e.target.value)}
                         placeholder="https://api.openai.com/v1"
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
                       />
                     </div>
                   </div>
@@ -257,7 +257,7 @@ export default function Settings(): React.JSX.Element {
                         onChange={(e) =>
                           updateSystemTheme(e.target.value as SystemSettings['theme'])
                         }
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
                       >
                         <option value="system">Follow System</option>
                         <option value="light">Light</option>
@@ -272,7 +272,7 @@ export default function Settings(): React.JSX.Element {
                       <select
                         value={settings.system.language}
                         onChange={(e) => updateSystemLanguage(e.target.value)}
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
                       >
                         <option value="zh-CN">简体中文</option>
                         <option value="en-US">English</option>
@@ -290,7 +290,7 @@ export default function Settings(): React.JSX.Element {
           <button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
               !hasChanges && !saving
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
                 : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'

@@ -29,6 +29,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     title: 'CatBot',
+    titleBarStyle: 'hiddenInset',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

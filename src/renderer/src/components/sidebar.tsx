@@ -15,33 +15,38 @@ export default function Sidebar(): React.JSX.Element {
 
   return (
     <div
-      className={`flex flex-col h-screen bg-gray-100 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ${
-        isExpanded ? 'w-64' : 'w-16'
+      className={`flex flex-col h-full bg-gray-100 dark:bg-gray-800 transition-all duration-300 ${
+        isExpanded ? 'w-42' : 'w-14'
       }`}
     >
-      <div className="flex items-center justify-between p-4 h-16">
-        {isExpanded && (
-          <span className="font-bold text-xl text-gray-900 dark:text-white">CatBot</span>
-        )}
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
-        >
-          {isExpanded ? <ChevronLeft size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
-
-      <nav className="flex-1 py-4 flex flex-col justify-between">
+      <nav className="flex-1 py-2 flex flex-col justify-between">
         <ul className="space-y-2 px-2">
+          <li>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className={`w-full flex items-center h-10 ${
+                isExpanded ? 'justify-between px-3' : 'justify-center px-1'
+              } rounded-lg transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer`}
+            >
+              {isExpanded ? (
+                <>
+                  <span className="font-bold text-xl text-gray-900 dark:text-white">CatBot</span>
+                  <ChevronLeft size={20} />
+                </>
+              ) : (
+                <Menu size={20} />
+              )}
+            </button>
+          </li>
           {mainNavItems.map((item) => (
             <li key={item.path}>
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center px-3 py-2 rounded-lg transition-colors ${
+                  `flex items-center h-10 ${isExpanded ? 'px-3' : 'justify-center px-1'} rounded-lg transition-colors ${
                     isActive
                       ? 'bg-blue-600 text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -62,10 +67,10 @@ export default function Sidebar(): React.JSX.Element {
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center px-3 py-2 rounded-lg transition-colors ${
+                  `flex items-center h-10 ${isExpanded ? 'px-3' : 'justify-center px-1'} rounded-lg transition-colors ${
                     isActive
                       ? 'bg-blue-600 text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`
                 }
               >

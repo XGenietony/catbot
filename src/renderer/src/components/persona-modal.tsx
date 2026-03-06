@@ -47,7 +47,7 @@ export function PersonaModal({ isOpen, onClose }: PersonaModalProps): React.JSX.
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl h-[80vh] border border-gray-200 dark:border-gray-800 flex flex-col">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl h-[80vh] border border-gray-200 dark:border-gray-800 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-lg font-bold">Configuration</h2>
           <button
