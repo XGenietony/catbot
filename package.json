@@ -1,6 +1,6 @@
 {
   "name": "catbot",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Desktop Agent App. Like OpenClaw, but with zero setup required.",
   "main": "./out/main/index.js",
   "author": "FourSix",
