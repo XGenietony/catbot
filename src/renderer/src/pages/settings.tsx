@@ -58,7 +58,7 @@ export default function Settings(): React.JSX.Element {
       const parsed: unknown = JSON.parse(content)
       const parsedRecord =
         typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {}
-      
+
       // Store complete parsed config to preserve other fields (like channels)
       const parsedModel =
         typeof parsedRecord.model === 'object' && parsedRecord.model !== null

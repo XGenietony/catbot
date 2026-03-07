@@ -46,14 +46,18 @@ const api = {
   updateChannelConfig: (channelId: string, config: unknown) =>
     ipcRenderer.invoke('channel:update-by-id', { channelId, config }),
   onAgentUpdate: (callback: (data: AgentUpdate, sessionId: string) => void): (() => void) => {
-    const listener = (_event: unknown, { update, sessionId }: { update: AgentUpdate; sessionId: string }): void =>
-      callback(update, sessionId)
+    const listener = (
+      _event: unknown,
+      { update, sessionId }: { update: AgentUpdate; sessionId: string }
+    ): void => callback(update, sessionId)
     ipcRenderer.on('agent-update', listener)
     return () => ipcRenderer.removeListener('agent-update', listener)
   },
   onAgentMessage: (callback: (data: ChatMessage, sessionId: string) => void): (() => void) => {
-    const listener = (_event: unknown, { message, sessionId }: { message: ChatMessage; sessionId: string }): void =>
-      callback(message, sessionId)
+    const listener = (
+      _event: unknown,
+      { message, sessionId }: { message: ChatMessage; sessionId: string }
+    ): void => callback(message, sessionId)
     ipcRenderer.on('agent-message', listener)
     return () => ipcRenderer.removeListener('agent-message', listener)
   },
