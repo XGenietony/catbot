@@ -102,43 +102,42 @@ export default function Skills(): React.JSX.Element {
                 key={`${skill.source}:${skill.name}`}
                 className="group relative border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-900"
               >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h2 className="font-semibold text-gray-900 dark:text-white truncate">
-                      {skill.name}
-                    </h2>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-semibold text-gray-900 dark:text-white truncate">
+                        {skill.name}
+                      </h2>
+                    </div>
+                    {skill.description ? (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {skill.description}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">无描述</p>
+                    )}
                   </div>
-                  {skill.description ? (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      {skill.description}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">无描述</p>
-                  )}
+                  <span className="text-xs text-gray-500 dark:text-gray-500 shrink-0">
+                    {skill.source === 'home' ? '~/.agents/skills' : skill.source}
+                  </span>
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-500 shrink-0">
-                  {skill.source === 'home' ? '~/.agents/skills' : skill.source}
-                </span>
+                {skill.source === 'workspace' && (
+                  <button
+                    onClick={() => handleDeleteSkill(skill.name)}
+                    disabled={deletingSkill === skill.name}
+                    className="absolute bottom-2 right-2 p-2 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    title="Delete Skill"
+                  >
+                    <Trash2
+                      size={16}
+                      className={deletingSkill === skill.name ? 'animate-spin' : ''}
+                    />
+                  </button>
+                )}
               </div>
-              {skill.source === 'workspace' && (
-                <button
-                  onClick={() => handleDeleteSkill(skill.name)}
-                  disabled={deletingSkill === skill.name}
-                  className="absolute bottom-2 right-2 p-2 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
-                  title="Delete Skill"
-                >
-                  <Trash2
-                    size={16}
-                    className={deletingSkill === skill.name ? 'animate-spin' : ''}
-                  />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
+            ))}
+          </div>
+        )}
       </div>
 
       <AddSkillModal

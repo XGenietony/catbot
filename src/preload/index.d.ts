@@ -1,5 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import { ChatMessage, AgentUpdate } from '../common/types'
+import { ChatMessage, AgentUpdate, ChannelConfig } from '../common/types'
 
 interface FileEntry {
   name: string
@@ -29,6 +29,8 @@ declare global {
       readSession: () => Promise<ChatMessage[]>
       clearSession: () => Promise<void>
       listSkills: (opts?: { filterUnavailable?: boolean }) => Promise<SkillListItem[]>
+      getChannelConfig: (channelId?: string) => Promise<ChannelConfig | unknown>
+      updateChannelConfig: (channelId: string, config: unknown) => Promise<void>
       onAgentUpdate: (callback: (data: AgentUpdate) => void) => () => void
     }
   }

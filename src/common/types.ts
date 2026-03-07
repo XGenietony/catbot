@@ -37,3 +37,10 @@ export interface SkillInfo {
   path?: string
   source: SkillSource
 }
+
+export interface ChannelConfig {
+  feishu: {
+    appId: string
+    appSecret: string
+  }
+}

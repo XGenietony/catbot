@@ -8,7 +8,8 @@ export default function Sidebar(): React.JSX.Element {
   const mainNavItems = [
     { path: '/', icon: MessageSquare, label: 'Chat' },
     { path: '/skills', icon: Zap, label: 'Skills' },
-    { path: '/workspace', icon: Folder, label: 'Workspace' }
+    { path: '/workspace', icon: Folder, label: 'Workspace' },
+    // { path: '/channels', icon: Radio, label: 'Channel' }
   ]
 
   const bottomNavItems = [{ path: '/settings', icon: Settings, label: 'Settings' }]
@@ -19,7 +20,7 @@ export default function Sidebar(): React.JSX.Element {
         isExpanded ? 'w-42' : 'w-14'
       }`}
     >
-      <nav className="flex-1 py-2 flex flex-col justify-between">
+      <nav className="flex-1 pb-2 flex flex-col justify-between">
         <ul className="space-y-2 px-2">
           <li>
             <button

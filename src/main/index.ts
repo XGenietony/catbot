@@ -10,11 +10,13 @@ import { registerAgentHandlers } from './handlers/agent-handler'
 import { registerSessionHandlers } from './handlers/session-handler'
 import { registerPromptHandlers } from './handlers/prompt-handler'
 import { registerSkillsHandlers } from './handlers/skills-handler'
+import { registerChannelHandlers } from './handlers/channel-handler'
 
 import { PromptManager } from './managers/prompt-manager'
 import { SettingsManager } from './managers/settings-manager'
 import { SessionManager } from './managers/session-manager'
 import { SkillsManager } from './managers/skills-manager'
+import { ChannelManager } from './managers/channel-manager'
 import { WORKSPACE_PATH } from './configs'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -99,6 +101,7 @@ app.whenReady().then(async () => {
     const settingsManager = new SettingsManager()
     const sessionManager = new SessionManager()
     const skillsManager = new SkillsManager()
+    const channelManager = new ChannelManager(settingsManager)
 
     // Initialize managers (creates default files if needed)
     await promptManager.init()
@@ -109,6 +112,7 @@ app.whenReady().then(async () => {
     // IPC Handlers for config files
     registerPromptHandlers(promptManager)
     registerSettingsHandlers(settingsManager)
+    registerChannelHandlers(channelManager)
 
     // IPC Handlers for Session
     registerSessionHandlers(sessionManager)

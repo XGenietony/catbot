@@ -34,6 +34,14 @@ const api = {
   clearSession: () => ipcRenderer.invoke('clear-session'),
   listSkills: (opts?: { filterUnavailable?: boolean }) =>
     ipcRenderer.invoke('list-skills', opts) as Promise<SkillListItem[]>,
+  getChannelConfig: (channelId?: string) => {
+    if (channelId) {
+      return ipcRenderer.invoke('channel:get-by-id', channelId)
+    }
+    return ipcRenderer.invoke('channel:get-config')
+  },
+  updateChannelConfig: (channelId: string, config: unknown) =>
+    ipcRenderer.invoke('channel:update-by-id', { channelId, config }),
   onAgentUpdate: (callback: (data: AgentUpdate) => void): (() => void) => {
     const listener = (_event: unknown, value: AgentUpdate): void => callback(value)
     ipcRenderer.on('agent-update', listener)

@@ -6,6 +6,7 @@ import Chat from './pages/chat'
 import Skills from './pages/skills'
 import Settings from './pages/settings'
 import Workspace from './pages/workspace'
+import Channels from './pages/channels'
 
 function MainLayout(): React.JSX.Element {
   const location = useLocation()
@@ -19,6 +20,7 @@ function MainLayout(): React.JSX.Element {
     { path: '/', component: <Chat /> },
     { path: '/skills', component: <Skills /> },
     { path: '/workspace', component: <Workspace /> },
+    { path: '/channels', component: <Channels /> },
     { path: '/settings', component: <Settings /> }
   ]
 
@@ -27,7 +29,7 @@ function MainLayout(): React.JSX.Element {
       <TitleBar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-hidden relative bg-gray-100 dark:bg-gray-800 pt-2 pb-2 pr-2">
+        <main className="flex-1 overflow-hidden relative bg-gray-100 dark:bg-gray-800 pb-2 pr-2">
           {routes.map((route) => {
             // Only render if visited at least once
             if (!visitedRoutes.has(route.path)) return null

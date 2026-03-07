@@ -245,7 +245,7 @@ export default function Chat(): React.JSX.Element {
               spellCheck={false}
               autoCorrect="off"
               autoCapitalize="off"
-              className="w-full bg-transparent text-gray-900 dark:text-white px-4 py-3 focus:outline-none resize-none min-h-[80px] max-h-[200px]"
+              className="w-full bg-transparent text-gray-900 dark:text-white px-4 py-3 focus:outline-none resize-none min-h-[80px] max-h-[200px] select-text"
               autoFocus
             />
 

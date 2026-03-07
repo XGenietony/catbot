@@ -15,9 +15,18 @@ export interface SystemSettings {
   language: string
 }
 
+export interface ChannelConfig {
+  feishu: {
+    appId: string
+    appSecret: string
+  }
+  [key: string]: unknown
+}
+
 export interface AppConfig {
   model: ModelSettings
   system: SystemSettings
+  channel: ChannelConfig
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -30,6 +39,12 @@ const DEFAULT_CONFIG: AppConfig = {
   system: {
     theme: 'system',
     language: 'zh-CN'
+  },
+  channel: {
+    feishu: {
+      appId: '',
+      appSecret: ''
+    }
   }
 }
 

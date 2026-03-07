@@ -129,21 +129,21 @@ export default function Settings(): React.JSX.Element {
   }
 
   return (
-    <div className="flex h-full bg-white dark:bg-gray-900">
+    <div className="flex h-full w-full bg-gray-100 dark:bg-gray-800 gap-1">
       {/* Sidebar */}
-      <div className="w-64 border-r border-gray-200 dark:border-gray-800 flex flex-col">
-        <div className="p-4">
+      <div className="w-64 bg-white dark:bg-gray-900 rounded-r-lg flex flex-col shadow-sm border-y border-r border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+        <div className="p-4 bg-gray-50/50 dark:bg-gray-800/50">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <SettingsIcon size={20} />
             Settings
           </h1>
         </div>
-        <nav className="flex-1 px-2 space-y-1">
+        <nav className="flex-1 overflow-y-auto p-2 space-y-1">
           <button
             onClick={() => setActiveTab('model')}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === 'model'
-                ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -152,9 +152,9 @@ export default function Settings(): React.JSX.Element {
           </button>
           <button
             onClick={() => setActiveTab('system')}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === 'system'
-                ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -165,9 +165,9 @@ export default function Settings(): React.JSX.Element {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex-1 overflow-auto p-8">
-          <div className="max-w-2xl mx-auto space-y-8">
+      <div className="flex-1 bg-white dark:bg-gray-900 rounded-lg flex flex-col shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-8 max-w-3xl mx-auto space-y-8">
             {activeTab === 'model' ? (
               <div className="space-y-6">
                 <div>
@@ -182,7 +182,7 @@ export default function Settings(): React.JSX.Element {
                       <select
                         value={settings.model.provider}
                         onChange={(e) => updateModelSetting('provider', e.target.value)}
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 dark:text-white"
                       >
                         <option value="openai">OpenAI</option>
                         <option value="anthropic">Anthropic</option>
@@ -201,7 +201,7 @@ export default function Settings(): React.JSX.Element {
                           value={settings.model.apiKey}
                           onChange={(e) => updateModelSetting('apiKey', e.target.value)}
                           placeholder="sk-..."
-                          className="w-full px-3 py-2 pr-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                          className="w-full px-4 py-2.5 pr-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 dark:text-white placeholder-gray-400"
                         />
                         <button
                           type="button"
@@ -222,7 +222,7 @@ export default function Settings(): React.JSX.Element {
                         value={settings.model.modelName}
                         onChange={(e) => updateModelSetting('modelName', e.target.value)}
                         placeholder="gpt-4o"
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 dark:text-white placeholder-gray-400"
                       />
                     </div>
 
@@ -235,7 +235,7 @@ export default function Settings(): React.JSX.Element {
                         value={settings.model.baseUrl}
                         onChange={(e) => updateModelSetting('baseUrl', e.target.value)}
                         placeholder="https://api.openai.com/v1"
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 dark:text-white placeholder-gray-400"
                       />
                     </div>
                   </div>
@@ -257,7 +257,7 @@ export default function Settings(): React.JSX.Element {
                         onChange={(e) =>
                           updateSystemTheme(e.target.value as SystemSettings['theme'])
                         }
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 dark:text-white"
                       >
                         <option value="system">Follow System</option>
                         <option value="light">Light</option>
@@ -272,7 +272,7 @@ export default function Settings(): React.JSX.Element {
                       <select
                         value={settings.system.language}
                         onChange={(e) => updateSystemLanguage(e.target.value)}
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white"
+                        className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 dark:text-white"
                       >
                         <option value="zh-CN">简体中文</option>
                         <option value="en-US">English</option>

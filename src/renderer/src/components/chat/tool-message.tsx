@@ -42,7 +42,7 @@ export function ToolMessage({ message }: ToolMessageProps): React.JSX.Element {
             {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </div>
           {isExpanded && (
-            <div className="space-y-2 mt-2">
+            <div className="space-y-2 mt-2 select-text">
               <div className="bg-white dark:bg-gray-900 rounded-lg p-2 overflow-x-auto">
                 <pre className="text-xs">{JSON.stringify(message.toolUse.input, null, 2)}</pre>
               </div>

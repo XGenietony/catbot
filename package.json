@@ -24,6 +24,7 @@
     "@anthropic-ai/sdk": "^0.78.0",
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@larksuiteoapi/node-sdk": "^1.59.0",
     "electron-updater": "^6.3.9",
     "fix-path": "^4.0.0",
     "lucide-react": "^0.576.0",

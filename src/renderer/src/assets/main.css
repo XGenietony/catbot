@@ -10,3 +10,16 @@
 button, a {
   -webkit-app-region: no-drag;
 }
+
+html, body {
+  @apply select-none;
+  -webkit-user-drag: none;
+}
+
+a {
+  -webkit-user-drag: none;
+}
+
+img {
+  -webkit-user-drag: none;
+}
