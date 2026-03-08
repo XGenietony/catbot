@@ -113,12 +113,12 @@ export class AgentManager extends EventEmitter {
 
   async run(
     sessionId: string,
-    messages: ChatMessage[],
+    message: ChatMessage,
     onUpdate?: (update: AgentUpdate) => void
   ): Promise<string> {
     const startedAt = Date.now()
     try {
-      console.log(`[agent-manager] start messages=${messages.length} session=${sessionId}`)
+      console.log(`[agent-manager] start message=${message.id} session=${sessionId}`)
 
       // 1. Read Config
       const config = await this.settingsManager.read()
@@ -148,15 +148,17 @@ export class AgentManager extends EventEmitter {
 
       // 4. Run Agent Loop
 
-      // Extract user's last message and append to session
-      const lastUserMsg = messages[messages.length - 1]
-      if (lastUserMsg && lastUserMsg.role === 'user') {
-        await this.sessionManager.append(lastUserMsg, sessionId)
-        this.emit('message', { message: lastUserMsg, sessionId })
+      // Append user message to session
+      if (message.role === 'user') {
+        await this.sessionManager.append(message, sessionId)
+        this.emit('message', { message, sessionId })
       }
 
+      // Load conversation history
+      const messages = await this.sessionManager.read(sessionId)
+
       let currentToolMsgId: string | undefined
-      let currentToolInput: Record<string, unknown> | undefined
+      let currentToolUseId: string | undefined
 
       const skillsSummary = await this.skillsManager.buildSkillsSummary()
       const alwaysSkills = await this.skillsManager.getAlwaysSkills()
@@ -194,12 +196,13 @@ ${skillsContext}`
               `[agent-manager] tool_use name=${toolName} id=${toolUseId} input_keys=${inputKeys.join(',') || '(none)'}`
             )
 
+            // 1. Tool Use (Assistant)
             const id = randomUUID()
             currentToolMsgId = id
-            currentToolInput = input
+            currentToolUseId = toolUseId
             const timestamp = Date.now()
 
-            const msg: ChatMessage = {
+            const toolUseMsg: ChatMessage = {
               id,
               role: 'assistant',
               content: `Using tool: ${toolName}`,
@@ -207,29 +210,19 @@ ${skillsContext}`
               toolUse: { tool: toolName, input, toolUseId }
             }
 
-            if (onUpdate) {
-              const update: AgentUpdate = {
-                type: 'tool_use',
-                tool: toolName,
-                input,
-                toolUseId,
-                message: msg
-              }
-              onUpdate(update)
-            }
-            this.emit('update', {
-              update: {
-                type: 'tool_use',
-                tool: toolName,
-                input,
-                toolUseId,
-                message: msg
-              },
-              sessionId
-            })
+            // Persist assistant message
+            await this.sessionManager.append(toolUseMsg, sessionId)
 
-            // Append to session
-            await this.sessionManager.append(msg, sessionId)
+            // Emit update for UI
+            const update: AgentUpdate = {
+              type: 'tool_use',
+              tool: toolName,
+              input,
+              toolUseId,
+              message: toolUseMsg
+            }
+            if (onUpdate) onUpdate(update)
+            this.emit('update', { update, sessionId })
           } catch (e) {
             console.error('Failed to send tool_use update', e)
           }
@@ -240,30 +233,32 @@ ${skillsContext}`
               `[agent-manager] tool_result name=${toolName} bytes=${Buffer.byteLength(output || '', 'utf-8')} error=${output.startsWith('Tool error')}`
             )
 
-            if (onUpdate) {
-              const update: AgentUpdate = {
-                type: 'tool_result',
+            // 2. Tool Result (User)
+            // Persist result as a new User message
+            const toolResultMsg: ChatMessage = {
+              id: randomUUID(),
+              role: 'user',
+              content: 'Tool Result',
+              timestamp: Date.now(),
+              toolUse: {
                 tool: toolName,
+                input: {}, // Placeholder, required by type
                 output,
-                id: currentToolMsgId
+                toolUseId: currentToolUseId
               }
-              onUpdate(update)
             }
-            this.emit('update', {
-              update: {
-                type: 'tool_result',
-                tool: toolName,
-                output,
-                id: currentToolMsgId
-              },
-              sessionId
-            })
+            await this.sessionManager.append(toolResultMsg, sessionId)
 
-            if (currentToolMsgId && currentToolInput) {
-              await this.sessionManager.update(currentToolMsgId, {
-                toolUse: { tool: toolName, input: currentToolInput, output }
-              })
+            // Emit update for UI
+            const update: AgentUpdate = {
+              type: 'tool_result',
+              tool: toolName,
+              output,
+              id: currentToolMsgId,
+              toolUseId: currentToolUseId
             }
+            if (onUpdate) onUpdate(update)
+            this.emit('update', { update, sessionId })
           } catch (e) {
             console.error('Failed to send tool_result update', e)
           }
@@ -318,14 +313,28 @@ ${skillsContext}`
 
     for (const msg of initialMessages) {
       if (msg.role === 'user') {
-        messages.push({ role: 'user', content: msg.content })
+        if (msg.toolUse?.output !== undefined) {
+          // This is a tool result message
+          const toolUseId = msg.toolUse.toolUseId || `call_${msg.id.slice(0, 10)}`
+          messages.push({
+            role: 'user',
+            content: [
+              {
+                type: 'tool_result',
+                tool_use_id: toolUseId,
+                content: msg.toolUse.output,
+                is_error: false
+              }
+            ]
+          })
+        } else {
+          // Standard User Message
+          messages.push({ role: 'user', content: msg.content })
+        }
       } else if (msg.role === 'assistant') {
         if (msg.toolUse) {
-          // Reconstruct Tool Use and Tool Result
-          // We use the persisted toolUseId if available, otherwise fallback to deterministic ID
+          // Assistant Message with Tool Use
           const toolUseId = msg.toolUse.toolUseId || `call_${msg.id.slice(0, 10)}`
-
-          // 1. Assistant Message with Tool Use
           messages.push({
             role: 'assistant',
             content: [
@@ -338,21 +347,6 @@ ${skillsContext}`
               }
             ]
           })
-
-          // 2. User Message with Tool Result (if output exists)
-          if (msg.toolUse.output !== undefined) {
-            messages.push({
-              role: 'user',
-              content: [
-                {
-                  type: 'tool_result',
-                  tool_use_id: toolUseId,
-                  content: msg.toolUse.output,
-                  is_error: false // We don't track is_error in ChatMessage yet, assume false
-                }
-              ]
-            })
-          }
         } else {
           // Standard Assistant Message
           messages.push({ role: 'assistant', content: msg.content })
@@ -423,7 +417,7 @@ ${skillsContext}`
     return messages
   }
 
-  private createToolHandlers(workspacePath: string): Record<string, ToolHandler> {
+  private createToolHandlers(workspacePath?: string): Record<string, ToolHandler> {
     const skillsManager = new SkillsManager()
 
     return {

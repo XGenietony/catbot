@@ -25,7 +25,7 @@ declare global {
       installSkillZip: (zipPath: string, force?: boolean) => Promise<string>
       selectSkillZip: () => Promise<string | null>
       deleteSkill: (name: string) => Promise<void>
-      agentLoop: (messages: ChatMessage[], sessionId?: string) => Promise<string>
+      agentLoop: (message: ChatMessage, sessionId?: string) => Promise<string>
       readSession: (sessionId?: string) => Promise<ChatMessage[]>
       clearSession: (sessionId?: string) => Promise<void>
       deleteSession: (sessionId: string) => Promise<void>

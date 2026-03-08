@@ -25,6 +25,7 @@ export interface AgentToolResultUpdate {
   tool: string
   output: string
   id?: string
+  toolUseId?: string
 }
 
 export type AgentUpdate = AgentToolUseUpdate | AgentToolResultUpdate

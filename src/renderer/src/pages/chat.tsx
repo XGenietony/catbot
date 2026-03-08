@@ -221,12 +221,8 @@ export default function Chat(): React.JSX.Element {
     focusInput()
 
     try {
-      // Prepare history for LLM
-      // Map existing messages plus the new one
-      const history = [...messages, userMessage]
-
-      // Call agent loop (it will handle session appending)
-      await window.api.agentLoop(history, currentSessionId)
+      // Call agent loop with the new user message
+      await window.api.agentLoop(userMessage, currentSessionId)
     } catch (error: unknown) {
       console.error('Chat error:', error)
       const msg = error instanceof Error ? error.message : String(error)
