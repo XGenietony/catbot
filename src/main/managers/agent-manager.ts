@@ -17,6 +17,7 @@ import { PromptManager } from './prompt-manager'
 import { SettingsManager } from './settings-manager'
 import { SessionManager } from './session-manager'
 import { SkillsManager } from './skills-manager'
+import { MemorySearchEngine } from '../memory'
 import { ChatMessage, AgentUpdate } from '../../common/types'
 import { SYSTEM_PROMPT } from '../prompts/prompt'
 import { WORKSPACE_PATH } from '../configs'
@@ -102,6 +103,7 @@ export class AgentManager extends EventEmitter {
   private settingsManager: SettingsManager
   private sessionManager: SessionManager
   private skillsManager: SkillsManager
+  private memorySearch?: MemorySearchEngine
 
   constructor(options: AgentManagerOptions) {
     super()
@@ -160,6 +162,94 @@ export class AgentManager extends EventEmitter {
       let currentToolMsgId: string | undefined
       let currentToolUseId: string | undefined
 
+      // Initialize Memory Search
+      if (!this.memorySearch) {
+        try {
+          this.memorySearch = new MemorySearchEngine(
+            sessionId,
+            {
+              enabled: true,
+              provider: 'auto', // Auto: uses OpenAI if API key available, else dummy
+              model: 'text-embedding-3-small',
+              sources: ['memory', 'sessions'],
+              query: {
+                maxResults: 3,
+                minScore: 0.4,
+                hybrid: {
+                  enabled: true,
+                  vectorWeight: 0.7,
+                  textWeight: 0.3,
+                  candidateMultiplier: 4,
+                  mmr: {
+                    enabled: true,
+                    lambda: 0.7
+                  },
+                  temporalDecay: {
+                    enabled: true,
+                    halfLifeDays: 30
+                  }
+                }
+              },
+              sync: {
+                onSessionStart: true,
+                onSearch: false, // Disable sync on every search for performance
+                watch: false,
+                watchDebounceMs: 1500,
+                intervalMinutes: 0
+              }
+            },
+            this.settingsManager
+          )
+          await this.memorySearch.init()
+          console.log('[agent-manager] Memory search initialized')
+        } catch (error) {
+          console.error('[agent-manager] Failed to initialize memory search:', error)
+          // Continue without memory search
+        }
+      }
+
+      // Search for relevant context from memory
+      let memoryContext = ''
+      if (this.memorySearch && message.role === 'user') {
+        try {
+          const memoryResults = await this.memorySearch.search({
+            query: message.content,
+            maxResults: 3,
+            minScore: 0.4,
+            sessionId
+          })
+
+          if (memoryResults.length > 0) {
+            console.log(`[agent-manager] Found ${memoryResults.length} relevant memories`)
+
+            memoryContext = '\n\n# Relevant Context from Memory\n\n'
+            memoryContext +=
+              'You have access to the following relevant information from memory and previous conversations:\n\n'
+
+            memoryResults.forEach((result, idx) => {
+              const source =
+                result.chunk.metadata.sourceType === 'sessions'
+                  ? 'Previous Conversation'
+                  : `Memory: ${result.chunk.metadata.source}`
+
+              const timestamp = new Date(result.chunk.metadata.timestamp).toLocaleDateString()
+
+              memoryContext += `## Context ${idx + 1} (Relevance: ${(result.score * 100).toFixed(1)}%)\n`
+              memoryContext += `Source: ${source}\n`
+              memoryContext += `Date: ${timestamp}\n\n`
+              memoryContext += `${result.chunk.content}\n\n`
+              memoryContext += '---\n\n'
+            })
+
+            memoryContext +=
+              'Use this context to provide more informed and contextual responses. Reference it naturally when relevant.\n'
+          }
+        } catch (error) {
+          console.error('[agent-manager] Memory search failed:', error)
+          // Continue without memory context
+        }
+      }
+
       const skillsSummary = await this.skillsManager.buildSkillsSummary()
       const alwaysSkills = await this.skillsManager.getAlwaysSkills()
       const alwaysSkillsContent = await this.skillsManager.loadSkillsForContext(alwaysSkills)
@@ -172,13 +262,14 @@ export class AgentManager extends EventEmitter {
 The following skills extend your capabilities. To use a skill, read its SKILL.md file using the load_skill tool.
 Skills with available="false" need dependencies installed first - you can try installing them with apt/brew.
 All skill executions must be performed strictly within the directory specified by the <location>{path}</location>.
-${skillsContext}`
+${skillsContext}`,
+        memoryContext
       ]
         .filter(Boolean)
         .join('\n\n')
 
       console.log(
-        `[agent-manager] system identity=${identityPrompt.length} agents=${agentsPrompt.length} skills_summary=${skillsSummary.length} always_skills=${alwaysSkills.length} always_skills_content=${alwaysSkillsContent.length} total=${system.length}`
+        `[agent-manager] system identity=${identityPrompt.length} agents=${agentsPrompt.length} skills_summary=${skillsSummary.length} always_skills=${alwaysSkills.length} always_skills_content=${alwaysSkillsContent.length} memory=${memoryContext.length} total=${system.length}`
       )
       if (process.env.DEBUG_SYSTEM_PROMPT === '1') {
         console.log('System Prompt:', system)
