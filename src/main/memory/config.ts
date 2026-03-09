@@ -172,8 +172,7 @@ export function resolveMemorySearchConfig(
       lambda: overrides?.query?.hybrid?.mmr?.lambda ?? DEFAULT_MMR_LAMBDA
     },
     temporalDecay: {
-      enabled:
-        overrides?.query?.hybrid?.temporalDecay?.enabled ?? DEFAULT_TEMPORAL_DECAY_ENABLED,
+      enabled: overrides?.query?.hybrid?.temporalDecay?.enabled ?? DEFAULT_TEMPORAL_DECAY_ENABLED,
       halfLifeDays:
         overrides?.query?.hybrid?.temporalDecay?.halfLifeDays ??
         DEFAULT_TEMPORAL_DECAY_HALF_LIFE_DAYS

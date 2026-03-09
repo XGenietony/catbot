@@ -300,7 +300,10 @@ export class VectorStore {
     const textResults = this.searchText(query, candidateLimit, options.sourceTypes)
 
     // Combine and normalize scores
-    const combined = new Map<string, { chunk: MemoryChunk; vectorScore: number; textScore: number }>()
+    const combined = new Map<
+      string,
+      { chunk: MemoryChunk; vectorScore: number; textScore: number }
+    >()
 
     // Process vector results
     if (vectorResults.length > 0) {
