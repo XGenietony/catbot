@@ -3,14 +3,7 @@
  * Based on OpenClaw's memory search architecture
  */
 
-export type EmbeddingProvider =
-  | 'openai'
-  | 'local'
-  | 'gemini'
-  | 'voyage'
-  | 'mistral'
-  | 'ollama'
-  | 'auto'
+export type EmbeddingProvider = 'openai' | 'local' | 'gemini' | 'voyage' | 'mistral' | 'ollama' | 'auto'
 
 export type MemorySource = 'memory' | 'sessions'
 
