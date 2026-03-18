@@ -42,7 +42,9 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
       throw new Error('OpenAI API key is required')
     }
 
-    const url = this.baseUrl ? `${this.baseUrl}/embeddings` : 'https://api.openai.com/v1/embeddings'
+    const url = this.baseUrl
+      ? `${this.baseUrl}/embeddings`
+      : 'https://api.openai.com/v1/embeddings'
 
     const response = await fetch(url, {
       method: 'POST',

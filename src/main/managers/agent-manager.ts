@@ -423,13 +423,7 @@ ${skillsContext}`,
           const toolUseId = msg.toolUse.toolUseId || `call_${msg.id.slice(0, 10)}`
 
           // Build content blocks
-          const contentBlocks: Array<{
-            type: string
-            text?: string
-            id?: string
-            name?: string
-            input?: unknown
-          }> = []
+          const contentBlocks: Array<{ type: string; text?: string; id?: string; name?: string; input?: unknown }> = []
 
           // Add text block if content is not empty
           if (msg.content && msg.content.trim()) {
@@ -466,9 +460,7 @@ ${skillsContext}`,
                     type: 'tool_result',
                     tool_use_id: toolUseId,
                     content: nextMsg.toolUse.output,
-                    is_error:
-                      nextMsg.toolUse.output.startsWith('Tool error') ||
-                      nextMsg.toolUse.output.startsWith('Error:')
+                    is_error: nextMsg.toolUse.output.startsWith('Tool error') || nextMsg.toolUse.output.startsWith('Error:')
                   }
                 ]
               })
@@ -479,9 +471,7 @@ ${skillsContext}`,
 
           // If no result found, add an error result to maintain message sequence
           if (!foundResult) {
-            console.warn(
-              `[agentLoop] No tool result found for tool use ${toolUseId}, adding error result`
-            )
+            console.warn(`[agentLoop] No tool result found for tool use ${toolUseId}, adding error result`)
             messages.push({
               role: 'user',
               content: [
@@ -505,9 +495,7 @@ ${skillsContext}`,
     const maxSteps = typeof opts.maxSteps === 'number' ? opts.maxSteps : 20
     const maxTokens = typeof opts.maxTokens === 'number' ? opts.maxTokens : 8000
 
-    console.log(
-      `[agentLoop] Converted ${initialMessages.length} chat messages to ${messages.length} API messages`
-    )
+    console.log(`[agentLoop] Converted ${initialMessages.length} chat messages to ${messages.length} API messages`)
     if (process.env.DEBUG_MESSAGES === '1') {
       console.log(`[agentLoop] messages=${JSON.stringify(messages, null, 2)}`)
     }
@@ -739,9 +727,7 @@ ${skillsContext}`,
             console.error(
               `[agentLoop] Message ${i}: Assistant has tool_use but next message is not user`
             )
-            throw new Error(
-              'Invalid message sequence: tool_use must be followed by user message with tool_result'
-            )
+            throw new Error('Invalid message sequence: tool_use must be followed by user message with tool_result')
           }
           if (Array.isArray(nextMsg.content)) {
             const hasToolResult = nextMsg.content.some((block: any) => block.type === 'tool_result')
@@ -749,9 +735,7 @@ ${skillsContext}`,
               console.error(
                 `[agentLoop] Message ${i + 1}: User message after tool_use does not contain tool_result`
               )
-              throw new Error(
-                'Invalid message sequence: user message after tool_use must contain tool_result'
-              )
+              throw new Error('Invalid message sequence: user message after tool_use must contain tool_result')
             }
           }
         }

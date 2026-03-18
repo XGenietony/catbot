@@ -136,19 +136,18 @@ export class MemorySearchEngine {
     const [queryEmbedding] = await embeddingProvider.embed([query])
 
     // Perform hybrid search
-    const results =
-      this.config.query.hybrid.enabled && this.config.store.vector.enabled
-        ? vectorStore.searchHybrid(query, queryEmbedding, {
-            limit: maxResults * 2, // Get more for filtering
-            vectorWeight: this.config.query.hybrid.vectorWeight,
-            textWeight: this.config.query.hybrid.textWeight,
-            sourceTypes: sources
-          })
-        : // Fallback to text search only
-          vectorStore.searchText(query, maxResults * 2, sources).map((chunk) => ({
-            chunk,
-            score: 0.5 // Default score for text-only search
-          }))
+    const results = this.config.query.hybrid.enabled && this.config.store.vector.enabled
+      ? vectorStore.searchHybrid(query, queryEmbedding, {
+          limit: maxResults * 2, // Get more for filtering
+          vectorWeight: this.config.query.hybrid.vectorWeight,
+          textWeight: this.config.query.hybrid.textWeight,
+          sourceTypes: sources
+        })
+      : // Fallback to text search only
+        vectorStore.searchText(query, maxResults * 2, sources).map((chunk) => ({
+          chunk,
+          score: 0.5 // Default score for text-only search
+        }))
 
     // Apply temporal decay if enabled
     let finalResults = results
@@ -351,9 +350,7 @@ export class MemorySearchEngine {
           }
         })
         // Apply overlap
-        const overlapChars = Math.floor(
-          maxChars * (this.config.chunking.overlap / this.config.chunking.tokens)
-        )
+        const overlapChars = Math.floor(maxChars * (this.config.chunking.overlap / this.config.chunking.tokens))
         currentChunk = currentChunk.slice(-overlapChars) + '\n' + line
       } else {
         currentChunk += (currentChunk ? '\n' : '') + line
